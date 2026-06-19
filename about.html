@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — LaserTools</title>
+  <meta name="description" content="About LaserTools — free interactive tools for laser cutter owners, buyers, and craft sellers.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="nav-logo">⬡ Laser<span>Tools</span></div>
+    <button class="nav-mobile-toggle" onclick="toggleNav()" aria-label="Toggle menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="diode-laser-materials.html">Material Check</a></li>
+      <li><a href="laser-settings-troubleshooter.html">Troubleshooter</a></li>
+      <li><a href="laser-material-safety-checker.html">Safety Checker</a></li>
+      <li><a href="laser-wattage-chooser.html">Wattage Chooser</a></li>
+    </ul>
+  </nav>
+
+  <main class="page-wrap" style="max-width:680px;">
+    <p class="page-eyebrow">About this site</p>
+    <h1>LaserTools</h1>
+    <p class="page-intro">Free, practical tools for people who own, buy, or sell with laser cutters.</p>
+
+    <div style="font-size:0.92rem;line-height:1.7;color:var(--text-muted);display:flex;flex-direction:column;gap:20px;">
+
+      <div>
+        <h2 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--text);margin-bottom:6px;">Why this site exists</h2>
+        <p>Laser cutter owners spend a lot of time searching for answers to practical questions — will this material work on my diode laser? Why is my wood charring? How many pieces can I fit on a sheet? How should I price this for Etsy?</p>
+        <p style="margin-top:10px;">Most of what exists online is either generic "best laser cutter" articles, YouTube rabbit holes, or scattered Reddit threads. LaserTools is an attempt to give those questions clear, interactive, tool-based answers.</p>
+      </div>
+
+      <div>
+        <h2 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--text);margin-bottom:6px;">What these tools are — and aren't</h2>
+        <p>These tools provide starting points and planning estimates. They are not certified safety guidance, guaranteed machine settings, or a replacement for your laser manufacturer's instructions. Laser performance depends on too many variables — machine model, optics condition, material batch, air assist, focus, ventilation — for any tool to promise exact results.</p>
+        <p style="margin-top:10px;">Always test on scrap material. Always follow manufacturer instructions. Always use proper ventilation.</p>
+      </div>
+
+      <div>
+        <h2 style="font-family:var(--font-head);font-size:1rem;font-weight:600;color:var(--text);margin-bottom:6px;">The tools</h2>
+        <ul style="display:flex;flex-direction:column;gap:8px;list-style:none;">
+          <li>🔵 <a href="diode-laser-materials.html">Diode Laser Material Compatibility</a> — check if your material will work on a diode laser</li>
+          <li>🔧 <a href="laser-settings-troubleshooter.html">Laser Settings Troubleshooter</a> — diagnose bad cuts and engraving results</li>
+          <li>⚠️ <a href="laser-material-safety-checker.html">Material Safety Checker</a> — check if a material is safe to laser</li>
+          <li>⚡ <a href="laser-wattage-chooser.html">Laser Wattage Chooser</a> — find the right laser class for your needs</li>
+          <li>📐 <a href="laser-sheet-yield-calculator.html">Sheet Yield Calculator</a> — estimate parts per sheet and material cost</li>
+          <li>💰 <a href="laser-job-pricing-calculator.html">Job Pricing Calculator</a> — price laser-made products accurately</li>
+        </ul>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-logo">⬡ Laser<span>Tools</span></div>
+      <nav class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    function toggleNav() {
+      document.getElementById('navLinks').classList.toggle('open');
+    }
+  </script>
+</body>
+</html>
