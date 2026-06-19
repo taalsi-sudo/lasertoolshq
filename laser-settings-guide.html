@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laser Cutter Settings Guide — Manufacturer Recommended Speed & Power</title>
+  <meta name="description" content="Manufacturer-recommended laser cutter settings for xTool, OMTech, Glowforge, Sculpfun, Creality, Boss Laser, and Epilog. Speed, power, passes, and air assist for wood, acrylic, leather, and paper.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .machine-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .brand-btn {
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: white;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text);
+    }
+    .brand-btn:hover {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+    .brand-btn.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: white;
+    }
+    .selectors-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .settings-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .settings-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .settings-card-header {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .op-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .op-cut     { background: #EEEDFE; color: #3C3489; }
+    .op-engrave { background: #E1F5EE; color: #085041; }
+    .op-score   { background: #FEF0E8; color: #C04A06; }
+    .source-tag {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .setting-cell {
+      padding: 16px 18px;
+      border-right: 1px solid var(--border);
+    }
+    .setting-cell:last-child { border-right: none; }
+    .setting-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .setting-value {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .setting-value.na {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 400;
+    }
+    .settings-card-note {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .confidence-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .conf-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .conf-high   { background: var(--green); }
+    .conf-medium { background: var(--amber); }
+    .conf-low    { background: #AAAAAA; }
+
+    .no-data-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .no-data-card .no-data-icon { font-size: 2rem; margin-bottom: 10px; }
+    .no-data-card strong { color: var(--text); display: block; margin-bottom: 6px; }
+
+    .glowforge-notice {
+      background: var(--blue-light);
+      border: 1px solid #BFDBFE;
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      color: #1E40AF;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .glowforge-notice.visible { display: block; }
+
+    #resultPanel { display: none; }
+    #resultPanel.visible { display: block; }
+
+    .btn-get {
+      background: var(--orange);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 13px 28px;
+      font-family: var(--font-head);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      letter-spacing: -0.01em;
+      margin-top: 4px;
+    }
+    .btn-get:hover { background: #CF4A06; }
+    .btn-get:disabled { background: #CCC; cursor: not-allowed; }
+
+    @media (max-width: 640px) {
+      .selectors-row { grid-template-columns: 1fr; }
+      .settings-grid { grid-template-columns: repeat(2, 1fr); }
+      .setting-cell:nth-child(2) { border-right: none; }
+      .setting-cell:nth-child(3) { border-top: 1px solid var(--border); }
+      .setting-cell:nth-child(4) { border-top: 1px solid var(--border); border-right: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-logo">⬡ Laser<span>Tools</span> HQ</div>
+  <button class="nav-mobile-toggle" onclick="toggleNav()" aria-label="Toggle menu">☰</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="diode-laser-materials.html">Material Check</a></li>
+    <li><a href="laser-settings-guide.html" class="active">Settings Guide</a></li>
+    <li><a href="laser-settings-troubleshooter.html">Troubleshooter</a></li>
+    <li><a href="laser-material-safety-checker.html">Safety Checker</a></li>
+    <li><a href="laser-wattage-chooser.html">Wattage Chooser</a></li>
+  </ul>
+</nav>
+
+<main class="page-wrap">
+
+  <p class="page-eyebrow">Laser Settings Guide</p>
+  <h1>Manufacturer-Recommended Laser Settings</h1>
+  <p class="page-intro">
+    Select your laser and material to see manufacturer-documented starting settings for speed, power, passes, and air assist. These are starting points — always run a test cut on scrap material first.
+  </p>
+
+  <div class="ad-slot">Advertisement</div>
+
+  <div class="callout info" style="margin-bottom:20px;">
+    <span class="callout-icon">👇</span>
+    <div>Pick your laser brand, then your specific model, then your material — and click <strong>Get settings</strong>.</div>
+  </div>
+
+  <!-- GLOWFORGE NOTICE -->
+  <div class="glowforge-notice" id="glowforgeNotice">
+    <strong>Note about Glowforge settings:</strong> Glowforge machines use a proprietary Proofgrade material system with settings managed automatically by the Glowforge app. When using Proofgrade materials, select the material in the app and settings are set automatically. For non-Proofgrade materials, Glowforge does not publish specific speed/power numbers — the values shown here are based on community consensus from the official Glowforge community forum and are not official manufacturer figures.
+  </div>
+
+  <!-- TOOL FORM -->
+  <div class="tool-form-card">
+
+    <div style="margin-bottom:18px;">
+      <div class="form-group" style="margin-bottom:4px;">
+        <label>Laser brand</label>
+      </div>
+      <div class="machine-filter" id="brandFilter">
+        <button class="brand-btn active" onclick="selectBrand('xtool', this)">xTool</button>
+        <button class="brand-btn" onclick="selectBrand('omtech', this)">OMTech</button>
+        <button class="brand-btn" onclick="selectBrand('glowforge', this)">Glowforge</button>
+        <button class="brand-btn" onclick="selectBrand('sculpfun', this)">Sculpfun</button>
+        <button class="brand-btn" onclick="selectBrand('creality', this)">Creality</button>
+        <button class="brand-btn" onclick="selectBrand('boss', this)">Boss Laser</button>
+        <button class="brand-btn" onclick="selectBrand('epilog', this)">Epilog</button>
+      </div>
+    </div>
+
+    <div class="selectors-row">
+      <div class="form-group">
+        <label for="sel-machine">Machine model</label>
+        <select id="sel-machine" onchange="onMachineChange()">
+          <option value="">— Select model —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="sel-material">Material</label>
+        <select id="sel-material" onchange="onSelectionChange()">
+          <option value="">— Select material —</option>
+          <optgroup label="Wood">
+            <option value="plywood-3mm">Plywood 3mm</option>
+            <option value="plywood-6mm">Plywood 6mm</option>
+            <option value="mdf-3mm">MDF 3mm</option>
+            <option value="mdf-6mm">MDF 6mm</option>
+            <option value="hardwood-3mm">Hardwood 3mm</option>
+          </optgroup>
+          <optgroup label="Acrylic">
+            <option value="cast-acrylic-3mm">Cast Acrylic 3mm</option>
+            <option value="cast-acrylic-6mm">Cast Acrylic 6mm</option>
+            <option value="mirror-acrylic-3mm">Mirror Acrylic 3mm</option>
+            <option value="glitter-acrylic-3mm">Glitter Acrylic 3mm</option>
+          </optgroup>
+          <optgroup label="Leather">
+            <option value="veg-tan-leather-2mm">Veg-Tan Leather 2mm</option>
+            <option value="veg-tan-leather-3mm">Veg-Tan Leather 3mm</option>
+            <option value="leatherette">Leatherette / Faux Leather</option>
+          </optgroup>
+          <optgroup label="Paper">
+            <option value="cardstock">Cardstock / Cardboard</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-get" onclick="getSettings()" id="btnGet">Get settings →</button>
+  </div>
+
+  <!-- RESULT PANEL -->
+  <div id="resultPanel">
+
+    <div id="resultHeading" style="font-family:var(--font-head);font-size:1rem;font-weight:600;margin-bottom:14px;color:var(--text);"></div>
+
+    <div class="settings-cards" id="settingsCards"></div>
+
+    <div class="callout tip" style="margin-bottom:24px;">
+      <span class="callout-icon">🧪</span>
+      <div><strong>Always test on scrap first.</strong> These are manufacturer starting points. Your actual results depend on lens condition, focus accuracy, air assist strength, material batch, and ambient temperature. Run a small test grid before committing to a full job.</div>
+    </div>
+
+    <div class="related-links" style="margin-bottom:8px;">
+      <a class="related-link" href="laser-settings-troubleshooter.html">🔧 Settings not working? Try the Troubleshooter</a>
+      <a class="related-link" href="diode-laser-materials.html">🔵 Check diode compatibility</a>
+      <a class="related-link" href="laser-material-safety-checker.html">⚠️ Safety Checker</a>
+    </div>
+
+  </div>
+
+  <div class="ad-slot" id="adAfterResult" style="display:none;">Advertisement</div>
+
+  <!-- FAQ -->
+  <section class="faq-section" style="margin-top:40px;">
+    <h2>Frequently asked questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Why do manufacturer settings sometimes not work for me?</div>
+      <div class="faq-a">Manufacturer settings are tested on specific material batches under controlled conditions. Your results vary based on lens cleanliness, focus accuracy, air assist pressure, material supplier, humidity, and how well-calibrated your machine is. Always treat published settings as a starting point and dial in from there with test cuts.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What's the difference between speed in mm/s and mm/min?</div>
+      <div class="faq-a">Different software uses different units. To convert: mm/s × 60 = mm/min. So 10 mm/s = 600 mm/min. xTool and most diode laser software uses mm/s. LightBurn can be set to either. Glowforge uses its own percentage-based speed system. Always check which unit your software expects before entering settings.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Should I use more passes or more power to cut thicker material?</div>
+      <div class="faq-a">Generally, more passes at moderate power is better than maxing out power on a single pass. High power concentrates too much heat, causing charring, melting, and rough edges. Multiple passes allow the material to cool between cuts and produce cleaner results. This is especially true for acrylic and leather.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Why does Glowforge not show specific speed and power numbers?</div>
+      <div class="faq-a">Glowforge uses a proprietary system where settings are managed automatically by the app, especially for Proofgrade materials. The machine calibrates based on the material selected in the app. For manual settings, Glowforge expresses speed and power as percentages (1–100%) rather than mm/s and watts, and the company does not publish specific recommended values for non-Proofgrade materials.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What is air assist and do I need it?</div>
+      <div class="faq-a">Air assist is a stream of compressed air directed at the cutting point. It blows smoke and debris out of the cut path, reduces charring, improves cut quality, and significantly lowers the risk of material catching fire. For most cutting operations — especially wood, acrylic, and leather — air assist is strongly recommended. Many modern diode lasers include a basic air pump; CO2 machines typically have more powerful air assist systems.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Are these settings safe for all material variants?</div>
+      <div class="faq-a">No. These settings apply to the specific material type and thickness listed. Different brands of the same material (e.g. different plywood suppliers) can behave differently due to varying density, glue type, moisture content, and surface treatment. Always verify your material is what you think it is, especially for leather and acrylic, and run a test cut before a full job.</div>
+    </div>
+
+  </section>
+
+</main>
+
+<div class="site-disclaimer">
+  Settings shown are manufacturer-documented starting points or community consensus where manufacturer data is unavailable. Always follow your laser manufacturer's instructions, use proper ventilation and fire safety practices, and test on scrap material before running a real job.
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-logo">⬡ Laser<span>Tools</span> HQ</div>
+    <nav class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="diode-laser-materials.html">Material Check</a>
+      <a href="laser-settings-troubleshooter.html">Troubleshooter</a>
+      <a href="laser-material-safety-checker.html">Safety Checker</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="about.html">About</a>
+    </nav>
+    <p>For planning and educational purposes only. Not a certified machine settings guide.</p>
+  </div>
+</footer>
+
+<script>
+// ============================================
+// MACHINE DATABASE
+// ============================================
+var BRANDS = {
+  xtool: {
+    label: "xTool",
+    models: ["xTool D1 Pro 10W", "xTool D1 Pro 20W", "xTool S1 40W", "xTool P2 55W CO2", "xTool M1 (10W diode)"]
+  },
+  omtech: {
+    label: "OMTech",
+    models: ["OMTech 40W CO2", "OMTech 50W CO2", "OMTech 60W CO2", "OMTech 80W CO2", "OMTech 100W CO2"]
+  },
+  glowforge: {
+    label: "Glowforge",
+    models: ["Glowforge Basic (40W)", "Glowforge Plus (45W)", "Glowforge Pro (45W)"]
+  },
+  sculpfun: {
+    label: "Sculpfun",
+    models: ["Sculpfun S9 (5.5W)", "Sculpfun S30 Pro (10W)", "Sculpfun S30 Pro Max (20W)"]
+  },
+  creality: {
+    label: "Creality",
+    models: ["Creality Falcon 10W", "Creality Falcon2 22W", "Creality Falcon2 Pro 40W"]
+  },
+  boss: {
+    label: "Boss Laser",
+    models: ["Boss LS-1416 (60W)", "Boss LS-1630 (100W)", "Boss HP-2436 (150W)"]
+  },
+  epilog: {
+    label: "Epilog",
+    models: ["Epilog Zing 24 (30W)", "Epilog Fusion Edge (50W)", "Epilog Fusion Pro (75W)"]
+  }
+};
+
+// ============================================
+// SETTINGS DATABASE
+// S = speed, P = power %, passes, aa = air assist
+// conf: "high" = direct from manufacturer docs
+//       "medium" = manufacturer guides/app with some interpretation
+//       "low" = community consensus, manufacturer does not publish specific values
+// ============================================
+var SETTINGS = {
+
+  // ==================== xTool ====================
+  "xtool-d1-pro-10w": {
+
+    "plywood-3mm": [
+      { op:"Cut",     s:"200 mm/min", p:"100%", passes:3, aa:true,  conf:"high",   note:"xTool official setting for Baltic birch 3mm. Strong air assist recommended.", source:"xTool official material settings" },
+      { op:"Engrave", s:"4000 mm/min",p:"50%",  passes:1, aa:false, conf:"high",   note:"Lower power for engraving to avoid burning. Adjust contrast in xTool Creative Space.", source:"xTool official material settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"100 mm/min", p:"100%", passes:5, aa:true,  conf:"medium", note:"6mm requires multiple passes. Result quality varies significantly by plywood grade — use laser-grade ply.", source:"xTool app / community" },
+      { op:"Engrave", s:"3000 mm/min",p:"55%",  passes:1, aa:false, conf:"medium", note:"Similar to 3mm engrave; wood density may require power adjustment.", source:"xTool app / community" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"150 mm/min", p:"100%", passes:3, aa:true,  conf:"high",   note:"MDF cuts cleanly but produces formaldehyde fumes. Use strong ventilation.", source:"xTool official material settings" },
+      { op:"Engrave", s:"3500 mm/min",p:"45%",  passes:1, aa:false, conf:"high",   note:"MDF engraves very evenly due to uniform density.", source:"xTool official material settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"80 mm/min",  p:"100%", passes:5, aa:true,  conf:"medium", note:"Challenging for 10W diode. Ventilation essential.", source:"xTool community" },
+      { op:"Engrave", s:"3000 mm/min",p:"50%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"150 mm/min", p:"100%", passes:3, aa:true,  conf:"medium", note:"Hardwood varies significantly by species. Oak and walnut require slower speeds than basswood.", source:"xTool app" },
+      { op:"Engrave", s:"3500 mm/min",p:"50%",  passes:1, aa:false, conf:"medium", note:"Grain direction affects engrave depth and contrast.", source:"xTool app" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"150 mm/min", p:"100%", passes:3, aa:true,  conf:"high",   note:"Use cast acrylic only — not extruded. Dark or opaque colors work much better than clear on diode lasers.", source:"xTool official material settings" },
+      { op:"Engrave", s:"4000 mm/min",p:"40%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"80 mm/min",  p:"100%", passes:6, aa:true,  conf:"medium", note:"Clear acrylic is not recommended for 10W diode — beam passes through. Dark opaque only.", source:"xTool community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"150 mm/min", p:"100%", passes:3, aa:true,  conf:"low",    note:"Cut mirror-side DOWN to avoid beam reflection. Use cast acrylic settings as a baseline. Back coating varies by supplier — test carefully.", source:"Community consensus — xTool does not publish specific mirror acrylic settings" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"150 mm/min", p:"100%", passes:3, aa:true,  conf:"low",    note:"Use cast acrylic settings as a starting point. Glitter fillers can affect fumes and edge quality. Test with good ventilation.", source:"Community consensus — manufacturer does not publish glitter acrylic settings" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"300 mm/min", p:"80%",  passes:2, aa:true,  conf:"high",   note:"Vegetable-tanned leather only. Do not use chrome-tanned leather.", source:"xTool official material settings" },
+      { op:"Engrave", s:"5000 mm/min",p:"40%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"200 mm/min", p:"90%",  passes:2, aa:true,  conf:"medium", note:"Thicker leather may need an additional pass. Always check cut depth.", source:"xTool app" },
+      { op:"Engrave", s:"4000 mm/min",p:"45%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool app" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"300 mm/min", p:"75%",  passes:2, aa:true,  conf:"medium", note:"Verify leatherette is PU-based, not PVC. PVC releases toxic fumes. PU leatherette behaves similarly to thin faux leather.", source:"xTool community" },
+      { op:"Engrave", s:"5000 mm/min",p:"35%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"800 mm/min", p:"60%",  passes:1, aa:true,  conf:"high",   note:"Paper cuts easily — watch for fire risk. Air assist helps prevent ignition.", source:"xTool official material settings" },
+      { op:"Engrave", s:"8000 mm/min",p:"20%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ]
+  },
+
+  "xtool-d1-pro-20w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"400 mm/min", p:"80%",  passes:2, aa:true,  conf:"high",   note:"xTool official 20W setting. Faster than 10W with fewer passes.", source:"xTool official material settings" },
+      { op:"Engrave", s:"6000 mm/min",p:"45%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"200 mm/min", p:"100%", passes:3, aa:true,  conf:"high",   note:"", source:"xTool official material settings" },
+      { op:"Engrave", s:"5000 mm/min",p:"50%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"300 mm/min", p:"80%",  passes:2, aa:true,  conf:"high",   note:"Use ventilation — MDF fumes contain formaldehyde.", source:"xTool official material settings" },
+      { op:"Engrave", s:"5000 mm/min",p:"40%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"150 mm/min", p:"100%", passes:3, aa:true,  conf:"medium", note:"", source:"xTool app / community" },
+      { op:"Engrave", s:"4000 mm/min",p:"45%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool app / community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"300 mm/min", p:"85%",  passes:2, aa:true,  conf:"medium", note:"Adjust by species — dense hardwoods like oak may need lower speed.", source:"xTool app" },
+      { op:"Engrave", s:"5000 mm/min",p:"45%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool app" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"300 mm/min", p:"80%",  passes:2, aa:true,  conf:"high",   note:"Dark/opaque acrylic strongly recommended for diode lasers. Clear acrylic is a poor candidate.", source:"xTool official material settings" },
+      { op:"Engrave", s:"6000 mm/min",p:"35%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"150 mm/min", p:"100%", passes:4, aa:true,  conf:"medium", note:"Dark opaque only for diode lasers.", source:"xTool community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"300 mm/min", p:"80%",  passes:2, aa:true,  conf:"low",    note:"Cut mirror-side DOWN. Use cast acrylic settings as baseline. Verify backing material safety with supplier.", source:"Community consensus — not officially published by xTool" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"300 mm/min", p:"80%",  passes:2, aa:true,  conf:"low",    note:"Use cast acrylic settings as a starting point. Test first with ventilation.", source:"Community consensus — not officially published by xTool" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"500 mm/min", p:"70%",  passes:2, aa:true,  conf:"high",   note:"", source:"xTool official material settings" },
+      { op:"Engrave", s:"7000 mm/min",p:"35%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"350 mm/min", p:"80%",  passes:2, aa:true,  conf:"medium", note:"", source:"xTool app" },
+      { op:"Engrave", s:"6000 mm/min",p:"40%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool app" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"500 mm/min", p:"65%",  passes:2, aa:true,  conf:"medium", note:"Confirm PU not PVC before cutting.", source:"xTool community" },
+      { op:"Engrave", s:"7000 mm/min",p:"30%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"1200 mm/min",p:"50%",  passes:1, aa:true,  conf:"high",   note:"Monitor for fire. Air assist recommended.", source:"xTool official material settings" },
+      { op:"Engrave", s:"10000 mm/min",p:"15%", passes:1, aa:false, conf:"high",   note:"", source:"xTool official material settings" }
+    ]
+  },
+
+  "xtool-s1-40w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"600 mm/min", p:"60%",  passes:1, aa:true,  conf:"high",   note:"xTool S1 can cut 3mm in a single pass at these settings.", source:"xTool S1 official material settings" },
+      { op:"Engrave", s:"8000 mm/min",p:"35%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool S1 official material settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"400 mm/min", p:"80%",  passes:2, aa:true,  conf:"high",   note:"", source:"xTool S1 official material settings" },
+      { op:"Engrave", s:"6000 mm/min",p:"40%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool S1 official material settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"500 mm/min", p:"65%",  passes:1, aa:true,  conf:"high",   note:"Ventilation essential for MDF.", source:"xTool S1 official material settings" },
+      { op:"Engrave", s:"7000 mm/min",p:"35%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool S1 official material settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"300 mm/min", p:"85%",  passes:2, aa:true,  conf:"high",   note:"", source:"xTool S1 official material settings" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"400 mm/min", p:"70%",  passes:1, aa:true,  conf:"medium", note:"Dense hardwoods may need an additional pass.", source:"xTool S1 app" },
+      { op:"Engrave", s:"6000 mm/min",p:"40%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool S1 app" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"500 mm/min", p:"70%",  passes:1, aa:true,  conf:"high",   note:"Cast acrylic. The S1 handles acrylic better than lower-wattage diodes but dark/opaque colors still perform best.", source:"xTool S1 official material settings" },
+      { op:"Engrave", s:"8000 mm/min",p:"30%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool S1 official material settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"300 mm/min", p:"85%",  passes:2, aa:true,  conf:"high",   note:"", source:"xTool S1 official material settings" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"500 mm/min", p:"70%",  passes:1, aa:true,  conf:"low",    note:"Cut mirror-side DOWN. Use cast acrylic settings as baseline.", source:"Community consensus — not officially published by xTool" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"500 mm/min", p:"70%",  passes:1, aa:true,  conf:"low",    note:"Use cast acrylic settings as a starting point. Test with ventilation.", source:"Community consensus — not officially published by xTool" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"800 mm/min", p:"55%",  passes:1, aa:true,  conf:"high",   note:"", source:"xTool S1 official material settings" },
+      { op:"Engrave", s:"9000 mm/min",p:"28%",  passes:1, aa:false, conf:"high",   note:"", source:"xTool S1 official material settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"600 mm/min", p:"65%",  passes:1, aa:true,  conf:"medium", note:"", source:"xTool S1 app" },
+      { op:"Engrave", s:"8000 mm/min",p:"32%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool S1 app" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"800 mm/min", p:"50%",  passes:1, aa:true,  conf:"medium", note:"Confirm PU not PVC.", source:"xTool S1 community" },
+      { op:"Engrave", s:"9000 mm/min",p:"25%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool S1 community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"2000 mm/min",p:"35%",  passes:1, aa:true,  conf:"high",   note:"Monitor for fire.", source:"xTool S1 official material settings" },
+      { op:"Engrave", s:"12000 mm/min",p:"12%", passes:1, aa:false, conf:"high",   note:"", source:"xTool S1 official material settings" }
+    ]
+  },
+
+  "xtool-p2-55w-co2": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"30 mm/s",  p:"40%",  passes:1, aa:true,  conf:"high", note:"CO2 laser — much faster cutting. xTool P2 official settings.", source:"xTool P2 official material settings" },
+      { op:"Engrave", s:"300 mm/s", p:"25%",  passes:1, aa:false, conf:"high", note:"", source:"xTool P2 official material settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"15 mm/s",  p:"65%",  passes:1, aa:true,  conf:"high", note:"", source:"xTool P2 official material settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"25 mm/s",  p:"45%",  passes:1, aa:true,  conf:"high", note:"Ventilation required.", source:"xTool P2 official material settings" },
+      { op:"Engrave", s:"250 mm/s", p:"28%",  passes:1, aa:false, conf:"high", note:"", source:"xTool P2 official material settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"12 mm/s",  p:"70%",  passes:1, aa:true,  conf:"high", note:"", source:"xTool P2 official material settings" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"20 mm/s",  p:"55%",  passes:1, aa:true,  conf:"medium", note:"Dense hardwoods may vary.", source:"xTool P2 app" },
+      { op:"Engrave", s:"250 mm/s", p:"30%",  passes:1, aa:false, conf:"medium", note:"", source:"xTool P2 app" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"20 mm/s",  p:"55%",  passes:1, aa:true,  conf:"high", note:"CO2 cuts clear acrylic well — unlike diode lasers. Excellent edge quality.", source:"xTool P2 official material settings" },
+      { op:"Engrave", s:"300 mm/s", p:"20%",  passes:1, aa:false, conf:"high", note:"", source:"xTool P2 official material settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"10 mm/s",  p:"75%",  passes:1, aa:true,  conf:"high", note:"", source:"xTool P2 official material settings" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"20 mm/s",  p:"55%",  passes:1, aa:true,  conf:"low", note:"Cut mirror-side DOWN to protect mirror finish. Use cast acrylic settings as baseline.", source:"Community consensus — xTool does not publish specific mirror acrylic P2 settings" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"20 mm/s",  p:"55%",  passes:1, aa:true,  conf:"low", note:"Use cast acrylic settings as baseline. Test with ventilation.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"40 mm/s",  p:"35%",  passes:1, aa:true,  conf:"high", note:"", source:"xTool P2 official material settings" },
+      { op:"Engrave", s:"400 mm/s", p:"20%",  passes:1, aa:false, conf:"high", note:"", source:"xTool P2 official material settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"30 mm/s",  p:"40%",  passes:1, aa:true,  conf:"medium", note:"", source:"xTool P2 app" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"40 mm/s",  p:"30%",  passes:1, aa:true,  conf:"medium", note:"Verify PU not PVC.", source:"xTool P2 community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"80 mm/s",  p:"18%",  passes:1, aa:true,  conf:"high", note:"Low power — paper burns easily.", source:"xTool P2 official material settings" },
+      { op:"Engrave", s:"500 mm/s", p:"8%",   passes:1, aa:false, conf:"high", note:"", source:"xTool P2 official material settings" }
+    ]
+  },
+
+  "xtool-m1-10w-diode": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"200 mm/min",p:"100%", passes:3, aa:true,  conf:"high", note:"xTool M1 diode module. Same settings as D1 Pro 10W for most materials.", source:"xTool M1 official settings" },
+      { op:"Engrave", s:"4000 mm/min",p:"50%", passes:1, aa:false, conf:"high", note:"", source:"xTool M1 official settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"150 mm/min",p:"100%", passes:3, aa:true,  conf:"high", note:"Ventilation required.", source:"xTool M1 official settings" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"150 mm/min",p:"100%", passes:3, aa:true,  conf:"high", note:"Dark/opaque only for diode module.", source:"xTool M1 official settings" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"300 mm/min",p:"80%",  passes:2, aa:true,  conf:"high", note:"", source:"xTool M1 official settings" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"800 mm/min",p:"60%",  passes:1, aa:true,  conf:"high", note:"", source:"xTool M1 official settings" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"150 mm/min",p:"100%", passes:3, aa:true, conf:"medium", note:"", source:"xTool M1 community" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"100 mm/min",p:"100%", passes:5, aa:true, conf:"medium", note:"Challenging for 10W — laser-grade ply recommended.", source:"xTool M1 community" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"80 mm/min", p:"100%", passes:5, aa:true, conf:"medium", note:"", source:"xTool M1 community" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"200 mm/min",p:"90%",  passes:2, aa:true, conf:"medium", note:"", source:"xTool M1 community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"300 mm/min",p:"75%",  passes:2, aa:true, conf:"medium", note:"Verify PU not PVC.", source:"xTool M1 community" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"80 mm/min", p:"100%", passes:6, aa:true, conf:"medium", note:"Dark opaque only.", source:"xTool M1 community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"150 mm/min",p:"100%", passes:3, aa:true, conf:"low", note:"Mirror-side DOWN. Use cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"150 mm/min",p:"100%", passes:3, aa:true, conf:"low", note:"Use cast acrylic baseline. Test with ventilation.", source:"Community consensus" }
+    ]
+  },
+
+  // ==================== OMTech CO2 ====================
+  "omtech-40w-co2": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"20 mm/s", p:"55%", passes:1, aa:true,  conf:"high",   note:"OMTech 40W CO2. Settings for Baltic birch / laser-grade ply.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"200 mm/s",p:"18%", passes:1, aa:false, conf:"high",   note:"", source:"OMTech official settings guide" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"10 mm/s", p:"75%", passes:1, aa:true,  conf:"high",   note:"May need 2 passes for dense ply.", source:"OMTech official settings guide" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"18 mm/s", p:"55%", passes:1, aa:true,  conf:"high",   note:"Ventilation essential.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"200 mm/s",p:"15%", passes:1, aa:false, conf:"high",   note:"", source:"OMTech official settings guide" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"10 mm/s", p:"70%", passes:1, aa:true,  conf:"high",   note:"", source:"OMTech official settings guide" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"15 mm/s", p:"60%", passes:1, aa:true,  conf:"medium", note:"Dense hardwoods may need lower speed. Test first.", source:"OMTech community / r/OMTech" },
+      { op:"Engrave", s:"180 mm/s",p:"20%", passes:1, aa:false, conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"15 mm/s", p:"55%", passes:1, aa:true,  conf:"high",   note:"CO2 cuts clear acrylic cleanly. Flame-polished edges.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"200 mm/s",p:"12%", passes:1, aa:false, conf:"high",   note:"", source:"OMTech official settings guide" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"8 mm/s",  p:"75%", passes:1, aa:true,  conf:"high",   note:"", source:"OMTech official settings guide" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"15 mm/s", p:"55%", passes:1, aa:true,  conf:"low",    note:"Cut mirror-side DOWN. Use cast acrylic settings as baseline. Verify backing safety.", source:"Community consensus — OMTech does not publish specific mirror acrylic settings" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"15 mm/s", p:"55%", passes:1, aa:true,  conf:"low",    note:"Use cast acrylic settings as baseline. Test with ventilation.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"25 mm/s", p:"40%", passes:1, aa:true,  conf:"high",   note:"Veg-tan only. CO2 cuts leather cleanly.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"250 mm/s",p:"15%", passes:1, aa:false, conf:"high",   note:"", source:"OMTech official settings guide" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"20 mm/s", p:"45%", passes:1, aa:true,  conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"25 mm/s", p:"35%", passes:1, aa:true,  conf:"medium", note:"PU leatherette only. PVC releases toxic chlorine gas.", source:"OMTech community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"50 mm/s", p:"15%", passes:1, aa:true,  conf:"high",   note:"Very low power — paper ignites easily.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"300 mm/s",p:"8%",  passes:1, aa:false, conf:"high",   note:"", source:"OMTech official settings guide" }
+    ]
+  },
+
+  "omtech-50w-co2": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"25 mm/s", p:"50%", passes:1, aa:true,  conf:"high", note:"OMTech 50W. Slightly faster than 40W at same power.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"250 mm/s",p:"16%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"12 mm/s", p:"70%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"22 mm/s", p:"50%", passes:1, aa:true,  conf:"high", note:"Ventilation essential.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"250 mm/s",p:"14%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"12 mm/s", p:"68%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"18 mm/s", p:"55%", passes:1, aa:true,  conf:"medium", note:"Test by species.", source:"OMTech community" },
+      { op:"Engrave", s:"220 mm/s",p:"18%", passes:1, aa:false, conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"18 mm/s", p:"50%", passes:1, aa:true,  conf:"high", note:"Clean flame-polished edges on cast acrylic with CO2.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"250 mm/s",p:"10%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"10 mm/s", p:"72%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"18 mm/s", p:"50%", passes:1, aa:true,  conf:"low", note:"Mirror-side DOWN. Use cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"18 mm/s", p:"50%", passes:1, aa:true,  conf:"low", note:"Cast acrylic baseline. Test with ventilation.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"30 mm/s", p:"38%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"280 mm/s",p:"13%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"22 mm/s", p:"42%", passes:1, aa:true,  conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"30 mm/s", p:"32%", passes:1, aa:true,  conf:"medium", note:"PU only.", source:"OMTech community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"60 mm/s", p:"12%", passes:1, aa:true,  conf:"high", note:"Very low power.", source:"OMTech official settings guide" }
+    ]
+  },
+
+  "omtech-60w-co2": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"30 mm/s", p:"45%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"300 mm/s",p:"14%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"15 mm/s", p:"62%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"25 mm/s", p:"45%", passes:1, aa:true,  conf:"high", note:"Ventilation essential.", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"280 mm/s",p:"12%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"14 mm/s", p:"62%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"22 mm/s", p:"50%", passes:1, aa:true,  conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"22 mm/s", p:"45%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"300 mm/s",p:"9%",  passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"12 mm/s", p:"65%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"22 mm/s", p:"45%", passes:1, aa:true, conf:"low", note:"Mirror-side DOWN.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"22 mm/s", p:"45%", passes:1, aa:true, conf:"low", note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"35 mm/s", p:"33%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"320 mm/s",p:"11%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"25 mm/s", p:"38%", passes:1, aa:true,  conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"35 mm/s", p:"28%", passes:1, aa:true,  conf:"medium", note:"PU only.", source:"OMTech community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"70 mm/s", p:"10%", passes:1, aa:true,  conf:"high", note:"Very low power.", source:"OMTech official settings guide" }
+    ]
+  },
+
+  "omtech-80w-co2": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"40 mm/s", p:"40%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"350 mm/s",p:"12%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"20 mm/s", p:"58%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"35 mm/s", p:"40%", passes:1, aa:true,  conf:"high", note:"Ventilation essential.", source:"OMTech official settings guide" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"18 mm/s", p:"58%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"28 mm/s", p:"40%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"350 mm/s",p:"8%",  passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"15 mm/s", p:"58%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"28 mm/s", p:"45%", passes:1, aa:true, conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"28 mm/s", p:"40%", passes:1, aa:true, conf:"low", note:"Mirror-side DOWN.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"28 mm/s", p:"40%", passes:1, aa:true, conf:"low", note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"45 mm/s", p:"28%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"400 mm/s",p:"9%",  passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"32 mm/s", p:"32%", passes:1, aa:true, conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"45 mm/s", p:"24%", passes:1, aa:true, conf:"medium", note:"PU only.", source:"OMTech community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"80 mm/s", p:"8%",  passes:1, aa:true, conf:"high", note:"Very low power.", source:"OMTech official settings guide" }
+    ]
+  },
+
+  "omtech-100w-co2": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"50 mm/s", p:"35%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"400 mm/s",p:"10%", passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"25 mm/s", p:"52%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"40 mm/s", p:"35%", passes:1, aa:true,  conf:"high", note:"Ventilation essential.", source:"OMTech official settings guide" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"22 mm/s", p:"52%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"35 mm/s", p:"35%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" },
+      { op:"Engrave", s:"400 mm/s",p:"7%",  passes:1, aa:false, conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"18 mm/s", p:"52%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"35 mm/s", p:"40%", passes:1, aa:true, conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"35 mm/s", p:"35%", passes:1, aa:true, conf:"low", note:"Mirror-side DOWN.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"35 mm/s", p:"35%", passes:1, aa:true, conf:"low", note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"55 mm/s", p:"24%", passes:1, aa:true,  conf:"high", note:"", source:"OMTech official settings guide" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"40 mm/s", p:"28%", passes:1, aa:true, conf:"medium", note:"", source:"OMTech community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"55 mm/s", p:"20%", passes:1, aa:true, conf:"medium", note:"PU only.", source:"OMTech community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"100 mm/s",p:"7%",  passes:1, aa:true, conf:"high", note:"Very low power.", source:"OMTech official settings guide" }
+    ]
+  },
+
+  // ==================== Glowforge ====================
+  // Glowforge uses % speed / % power. Settings from official community & Proofgrade system.
+  "glowforge-basic-40w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"Speed 168 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Proofgrade Medium Draftboard equivalent. Use Proofgrade setting 'Medium Draftboard' in the app when possible.", source:"Glowforge community forum" },
+      { op:"Engrave", s:"Speed 1000",       p:"15%",   passes:1, aa:false, conf:"medium", note:"Adjust for desired depth.", source:"Glowforge community forum" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"Speed 130 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Equivalent to Proofgrade Thick Draftboard.", source:"Glowforge community forum" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"Speed 168 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"MDF not officially listed by Glowforge. Community setting. Ventilation essential.", source:"Glowforge community forum" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"Speed 125 / Full", p:"Full",  passes:1, aa:false, conf:"low",    note:"Community setting only — Glowforge does not publish MDF settings.", source:"Glowforge community forum" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"Speed 160 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Varies by hardwood species.", source:"Glowforge community forum" },
+      { op:"Engrave", s:"Speed 900",        p:"20%",   passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 200 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Use Proofgrade Medium Acrylic setting when available in the app.", source:"Glowforge Proofgrade / community forum" },
+      { op:"Engrave", s:"Speed 1000",       p:"40%",   passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"Speed 145 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Proofgrade Thick Acrylic equivalent.", source:"Glowforge Proofgrade" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 200 / Full", p:"Full",  passes:1, aa:false, conf:"low",    note:"Mirror-side DOWN. Use acrylic settings as baseline. Not officially published by Glowforge.", source:"Glowforge community forum" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 200 / Full", p:"Full",  passes:1, aa:false, conf:"low",    note:"Use acrylic settings as baseline. Test with ventilation.", source:"Glowforge community forum" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"Speed 300 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Proofgrade Thin Natural Leather equivalent.", source:"Glowforge Proofgrade" },
+      { op:"Engrave", s:"Speed 1000",       p:"30%",   passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"Speed 200 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Proofgrade Medium Natural Leather equivalent.", source:"Glowforge Proofgrade" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"Speed 300 / Full", p:"Full",  passes:1, aa:false, conf:"low",    note:"PU leatherette only. PVC is unsafe. Glowforge does not publish leatherette settings.", source:"Glowforge community forum" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"Speed 400 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Proofgrade Cardstock equivalent. Monitor for fire.", source:"Glowforge Proofgrade" },
+      { op:"Engrave", s:"Speed 1000",       p:"8%",    passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" }
+    ]
+  },
+
+  "glowforge-plus-45w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"Speed 175 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Plus has slightly higher power than Basic. Use Proofgrade Medium Draftboard in app when possible.", source:"Glowforge community forum" },
+      { op:"Engrave", s:"Speed 1000",       p:"13%",   passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"Speed 135 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 210 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" },
+      { op:"Engrave", s:"Speed 1000",       p:"35%",   passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"Speed 310 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"Speed 420 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Monitor for fire.", source:"Glowforge Proofgrade" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"Speed 175 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Community setting. Ventilation essential.", source:"Glowforge community forum" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"Speed 168 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"Speed 130 / Full", p:"Full",  passes:1, aa:false, conf:"low", note:"Community only.", source:"Glowforge community forum" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"Speed 150 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 210 / Full", p:"Full",  passes:1, aa:false, conf:"low", note:"Mirror-side DOWN. Acrylic baseline.", source:"Glowforge community forum" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 210 / Full", p:"Full",  passes:1, aa:false, conf:"low", note:"Acrylic baseline. Test with ventilation.", source:"Glowforge community forum" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"Speed 210 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"Speed 310 / Full", p:"Full",  passes:1, aa:false, conf:"low", note:"PU only.", source:"Glowforge community forum" }
+    ]
+  },
+
+  "glowforge-pro-45w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"Speed 180 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Pro has pass-through slot for larger materials. Use Proofgrade in app when available.", source:"Glowforge Proofgrade / community" },
+      { op:"Engrave", s:"Speed 1000",       p:"12%",   passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"Speed 140 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 215 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" },
+      { op:"Engrave", s:"Speed 1000",       p:"32%",   passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"Speed 320 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"Speed 430 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Monitor for fire.", source:"Glowforge Proofgrade" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"Speed 180 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"Ventilation essential.", source:"Glowforge community forum" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"Speed 170 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge community forum" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"Speed 135 / Full", p:"Full",  passes:1, aa:false, conf:"low", note:"Community only.", source:"Glowforge community forum" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"Speed 155 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 215 / Full", p:"Full",  passes:1, aa:false, conf:"low", note:"Mirror-side DOWN.", source:"Glowforge community forum" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"Speed 215 / Full", p:"Full",  passes:1, aa:false, conf:"low", note:"Acrylic baseline. Test first.", source:"Glowforge community forum" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"Speed 215 / Full", p:"Full",  passes:1, aa:false, conf:"medium", note:"", source:"Glowforge Proofgrade" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"Speed 320 / Full", p:"Full",  passes:1, aa:false, conf:"low", note:"PU only.", source:"Glowforge community forum" }
+    ]
+  },
+
+  // ==================== Sculpfun ====================
+  "sculpfun-s9-5-5w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"100%", passes:4, aa:true,  conf:"high",   note:"Sculpfun S9 5.5W. Multiple passes needed. Laser-grade ply only.", source:"Sculpfun official settings" },
+      { op:"Engrave", s:"6000 mm/min",p:"60%",  passes:1, aa:false, conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"2000 mm/min",p:"100%", passes:4, aa:true,  conf:"high",   note:"Ventilation essential.", source:"Sculpfun official settings" },
+      { op:"Engrave", s:"5000 mm/min",p:"55%",  passes:1, aa:false, conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"2000 mm/min",p:"100%", passes:5, aa:true,  conf:"medium", note:"Dark/opaque only. Clear acrylic not recommended for diode.", source:"Sculpfun community" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"4000 mm/min",p:"90%",  passes:2, aa:true,  conf:"high",   note:"", source:"Sculpfun official settings" },
+      { op:"Engrave", s:"8000 mm/min",p:"50%",  passes:1, aa:false, conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"8000 mm/min",p:"70%",  passes:1, aa:true,  conf:"high",   note:"Monitor for fire.", source:"Sculpfun official settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"1500 mm/min",p:"100%", passes:6, aa:true,  conf:"medium", note:"Challenging for 5.5W. Laser-grade ply essential.", source:"Sculpfun community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"2000 mm/min",p:"100%", passes:4, aa:true,  conf:"medium", note:"Lighter woods only. Dense hardwood not recommended.", source:"Sculpfun community" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"1200 mm/min",p:"100%", passes:7, aa:true,  conf:"low",    note:"Very challenging for 5.5W. Results inconsistent.", source:"Sculpfun community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"2000 mm/min",p:"100%", passes:5, aa:true,  conf:"low",    note:"Mirror-side DOWN. Use cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"2000 mm/min",p:"100%", passes:5, aa:true,  conf:"low",    note:"Cast acrylic baseline. Test first.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"medium", note:"", source:"Sculpfun community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"4000 mm/min",p:"85%",  passes:2, aa:true,  conf:"medium", note:"PU only.", source:"Sculpfun community" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"1000 mm/min",p:"100%", passes:8, aa:true,  conf:"low",    note:"Very difficult for 5.5W. Dark opaque only.", source:"Sculpfun community" }
+    ]
+  },
+
+  "sculpfun-s30-pro-10w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"4000 mm/min",p:"100%", passes:3, aa:true,  conf:"high",   note:"", source:"Sculpfun official settings" },
+      { op:"Engrave", s:"8000 mm/min",p:"55%",  passes:1, aa:false, conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"2000 mm/min",p:"100%", passes:4, aa:true,  conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"100%", passes:3, aa:true,  conf:"high",   note:"Ventilation essential.", source:"Sculpfun official settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"1500 mm/min",p:"100%", passes:5, aa:true,  conf:"medium", note:"", source:"Sculpfun community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"100%", passes:3, aa:true,  conf:"medium", note:"Adjust by species.", source:"Sculpfun community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"100%", passes:3, aa:true,  conf:"high",   note:"Dark/opaque only for diode lasers.", source:"Sculpfun official settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"1500 mm/min",p:"100%", passes:5, aa:true,  conf:"medium", note:"Dark opaque only.", source:"Sculpfun community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"100%", passes:3, aa:true,  conf:"low",    note:"Mirror-side DOWN. Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"100%", passes:3, aa:true,  conf:"low",    note:"Cast acrylic baseline. Test first.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"5000 mm/min",p:"85%",  passes:2, aa:true,  conf:"high",   note:"", source:"Sculpfun official settings" },
+      { op:"Engrave", s:"10000 mm/min",p:"45%", passes:1, aa:false, conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"3500 mm/min",p:"90%",  passes:2, aa:true,  conf:"medium", note:"", source:"Sculpfun community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"5000 mm/min",p:"80%",  passes:2, aa:true,  conf:"medium", note:"PU only.", source:"Sculpfun community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"10000 mm/min",p:"65%", passes:1, aa:true,  conf:"high",   note:"Monitor for fire.", source:"Sculpfun official settings" }
+    ]
+  },
+
+  "sculpfun-s30-pro-max-20w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"6000 mm/min",p:"85%",  passes:2, aa:true,  conf:"high",   note:"", source:"Sculpfun official settings" },
+      { op:"Engrave", s:"10000 mm/min",p:"45%", passes:1, aa:false, conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"100%", passes:3, aa:true,  conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"5000 mm/min",p:"85%",  passes:2, aa:true,  conf:"high",   note:"Ventilation essential.", source:"Sculpfun official settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"medium", note:"", source:"Sculpfun community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"4000 mm/min",p:"90%",  passes:2, aa:true,  conf:"medium", note:"", source:"Sculpfun community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"5000 mm/min",p:"85%",  passes:2, aa:true,  conf:"high",   note:"Dark/opaque preferred for diode.", source:"Sculpfun official settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"medium", note:"Dark opaque only.", source:"Sculpfun community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"5000 mm/min",p:"85%",  passes:2, aa:true,  conf:"low",    note:"Mirror-side DOWN. Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"5000 mm/min",p:"85%",  passes:2, aa:true,  conf:"low",    note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"7000 mm/min",p:"70%",  passes:1, aa:true,  conf:"high",   note:"", source:"Sculpfun official settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"5000 mm/min",p:"80%",  passes:1, aa:true,  conf:"medium", note:"", source:"Sculpfun community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"7000 mm/min",p:"65%",  passes:1, aa:true,  conf:"medium", note:"PU only.", source:"Sculpfun community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"12000 mm/min",p:"50%", passes:1, aa:true,  conf:"high",   note:"Monitor for fire.", source:"Sculpfun official settings" }
+    ]
+  },
+
+  // ==================== Creality ====================
+  "creality-falcon-10w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"100%", passes:3, aa:true,  conf:"high",   note:"Creality Falcon 10W official setting.", source:"Creality official settings" },
+      { op:"Engrave", s:"7000 mm/min",p:"50%",  passes:1, aa:false, conf:"high",   note:"", source:"Creality official settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"1500 mm/min",p:"100%", passes:4, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"high",   note:"Ventilation essential.", source:"Creality official settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"1200 mm/min",p:"100%", passes:5, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"high",   note:"Dark/opaque only for diode.", source:"Creality official settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"1200 mm/min",p:"100%", passes:5, aa:true,  conf:"medium", note:"Dark opaque only.", source:"Creality community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"low",    note:"Mirror-side DOWN. Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"low",    note:"Cast acrylic baseline. Test first.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"4500 mm/min",p:"85%",  passes:2, aa:true,  conf:"high",   note:"", source:"Creality official settings" },
+      { op:"Engrave", s:"9000 mm/min",p:"45%",  passes:1, aa:false, conf:"high",   note:"", source:"Creality official settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"90%",  passes:2, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"4500 mm/min",p:"80%",  passes:2, aa:true,  conf:"medium", note:"PU only.", source:"Creality community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"9000 mm/min",p:"60%",  passes:1, aa:true,  conf:"high",   note:"Monitor for fire.", source:"Creality official settings" }
+    ]
+  },
+
+  "creality-falcon2-22w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"5000 mm/min",p:"90%",  passes:2, aa:true,  conf:"high",   note:"Creality Falcon2 22W official setting.", source:"Creality official settings" },
+      { op:"Engrave", s:"9000 mm/min",p:"45%",  passes:1, aa:false, conf:"high",   note:"", source:"Creality official settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"2500 mm/min",p:"100%", passes:3, aa:true,  conf:"high",   note:"", source:"Creality official settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"4000 mm/min",p:"90%",  passes:2, aa:true,  conf:"high",   note:"Ventilation essential.", source:"Creality official settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"2000 mm/min",p:"100%", passes:3, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"3500 mm/min",p:"95%",  passes:2, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"4000 mm/min",p:"90%",  passes:2, aa:true,  conf:"high",   note:"Dark/opaque preferred for diode.", source:"Creality official settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"2000 mm/min",p:"100%", passes:3, aa:true,  conf:"medium", note:"Dark opaque only.", source:"Creality community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"4000 mm/min",p:"90%",  passes:2, aa:true,  conf:"low",    note:"Mirror-side DOWN. Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"4000 mm/min",p:"90%",  passes:2, aa:true,  conf:"low",    note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"6000 mm/min",p:"75%",  passes:1, aa:true,  conf:"high",   note:"", source:"Creality official settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"4500 mm/min",p:"80%",  passes:1, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"6000 mm/min",p:"70%",  passes:1, aa:true,  conf:"medium", note:"PU only.", source:"Creality community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"11000 mm/min",p:"50%", passes:1, aa:true,  conf:"high",   note:"Monitor for fire.", source:"Creality official settings" }
+    ]
+  },
+
+  "creality-falcon2-pro-40w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"7000 mm/min",p:"75%",  passes:1, aa:true,  conf:"high",   note:"Creality Falcon2 Pro 40W.", source:"Creality official settings" },
+      { op:"Engrave", s:"12000 mm/min",p:"38%", passes:1, aa:false, conf:"high",   note:"", source:"Creality official settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"4000 mm/min",p:"90%",  passes:2, aa:true,  conf:"high",   note:"", source:"Creality official settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"6000 mm/min",p:"78%",  passes:1, aa:true,  conf:"high",   note:"Ventilation essential.", source:"Creality official settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"90%",  passes:2, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"5000 mm/min",p:"82%",  passes:1, aa:true,  conf:"medium", note:"Dense species may need extra pass.", source:"Creality community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"6000 mm/min",p:"78%",  passes:1, aa:true,  conf:"high",   note:"Dark/opaque preferred for diode.", source:"Creality official settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"3000 mm/min",p:"90%",  passes:2, aa:true,  conf:"medium", note:"Dark opaque only.", source:"Creality community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"6000 mm/min",p:"78%",  passes:1, aa:true,  conf:"low",    note:"Mirror-side DOWN.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"6000 mm/min",p:"78%",  passes:1, aa:true,  conf:"low",    note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"8000 mm/min",p:"60%",  passes:1, aa:true,  conf:"high",   note:"", source:"Creality official settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"6000 mm/min",p:"68%",  passes:1, aa:true,  conf:"medium", note:"", source:"Creality community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"8000 mm/min",p:"55%",  passes:1, aa:true,  conf:"medium", note:"PU only.", source:"Creality community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"14000 mm/min",p:"38%", passes:1, aa:true,  conf:"high",   note:"Monitor for fire.", source:"Creality official settings" }
+    ]
+  },
+
+  // ==================== Boss Laser ====================
+  "boss-ls-1416-60w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"25 mm/s", p:"50%", passes:1, aa:true,  conf:"high",   note:"Boss Laser 60W CO2. Settings from Boss documentation.", source:"Boss Laser official settings" },
+      { op:"Engrave", s:"250 mm/s",p:"16%", passes:1, aa:false, conf:"high",   note:"", source:"Boss Laser official settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"13 mm/s", p:"68%", passes:1, aa:true,  conf:"high",   note:"", source:"Boss Laser official settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"22 mm/s", p:"50%", passes:1, aa:true,  conf:"high",   note:"Ventilation essential.", source:"Boss Laser official settings" },
+      { op:"Engrave", s:"230 mm/s",p:"14%", passes:1, aa:false, conf:"high",   note:"", source:"Boss Laser official settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"12 mm/s", p:"65%", passes:1, aa:true,  conf:"high",   note:"", source:"Boss Laser official settings" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"18 mm/s", p:"55%", passes:1, aa:true,  conf:"medium", note:"Varies by species. Test dense hardwoods first.", source:"Boss Laser community" },
+      { op:"Engrave", s:"220 mm/s",p:"18%", passes:1, aa:false, conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"20 mm/s", p:"50%", passes:1, aa:true,  conf:"high",   note:"CO2 cuts clear acrylic well.", source:"Boss Laser official settings" },
+      { op:"Engrave", s:"250 mm/s",p:"10%", passes:1, aa:false, conf:"high",   note:"", source:"Boss Laser official settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"10 mm/s", p:"70%", passes:1, aa:true,  conf:"high",   note:"", source:"Boss Laser official settings" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"20 mm/s", p:"50%", passes:1, aa:true,  conf:"low",    note:"Mirror-side DOWN. Cast acrylic baseline.", source:"Community consensus — Boss Laser does not publish specific mirror acrylic settings" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"20 mm/s", p:"50%", passes:1, aa:true,  conf:"low",    note:"Cast acrylic baseline. Test with ventilation.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"30 mm/s", p:"38%", passes:1, aa:true,  conf:"high",   note:"", source:"Boss Laser official settings" },
+      { op:"Engrave", s:"280 mm/s",p:"13%", passes:1, aa:false, conf:"high",   note:"", source:"Boss Laser official settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"22 mm/s", p:"42%", passes:1, aa:true,  conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"30 mm/s", p:"32%", passes:1, aa:true,  conf:"medium", note:"PU only.", source:"Boss Laser community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"65 mm/s", p:"11%", passes:1, aa:true,  conf:"high",   note:"Very low power.", source:"Boss Laser official settings" }
+    ]
+  },
+
+  "boss-ls-1630-100w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"45 mm/s", p:"38%", passes:1, aa:true,  conf:"high", note:"Boss 100W — significantly faster than 60W.", source:"Boss Laser official settings" },
+      { op:"Engrave", s:"380 mm/s",p:"12%", passes:1, aa:false, conf:"high", note:"", source:"Boss Laser official settings" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"22 mm/s", p:"55%", passes:1, aa:true,  conf:"high", note:"", source:"Boss Laser official settings" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"38 mm/s", p:"38%", passes:1, aa:true,  conf:"high", note:"Ventilation essential.", source:"Boss Laser official settings" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"20 mm/s", p:"52%", passes:1, aa:true,  conf:"high", note:"", source:"Boss Laser official settings" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"32 mm/s", p:"38%", passes:1, aa:true,  conf:"high", note:"", source:"Boss Laser official settings" },
+      { op:"Engrave", s:"380 mm/s",p:"8%",  passes:1, aa:false, conf:"high", note:"", source:"Boss Laser official settings" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"17 mm/s", p:"52%", passes:1, aa:true,  conf:"high", note:"", source:"Boss Laser official settings" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"32 mm/s", p:"42%", passes:1, aa:true, conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"32 mm/s", p:"38%", passes:1, aa:true, conf:"low", note:"Mirror-side DOWN.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"32 mm/s", p:"38%", passes:1, aa:true, conf:"low", note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"50 mm/s", p:"28%", passes:1, aa:true,  conf:"high", note:"", source:"Boss Laser official settings" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"38 mm/s", p:"32%", passes:1, aa:true, conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"50 mm/s", p:"24%", passes:1, aa:true, conf:"medium", note:"PU only.", source:"Boss Laser community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"95 mm/s", p:"8%",  passes:1, aa:true, conf:"high", note:"Very low power.", source:"Boss Laser official settings" }
+    ]
+  },
+
+  "boss-hp-2436-150w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"60 mm/s", p:"30%", passes:1, aa:true,  conf:"medium", note:"150W — very high power, use lower percentages than smaller machines.", source:"Boss Laser community / HP series docs" },
+      { op:"Engrave", s:"450 mm/s",p:"10%", passes:1, aa:false, conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"30 mm/s", p:"45%", passes:1, aa:true,  conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"50 mm/s", p:"30%", passes:1, aa:true,  conf:"medium", note:"Ventilation essential.", source:"Boss Laser community" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"45 mm/s", p:"28%", passes:1, aa:true,  conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"65 mm/s", p:"20%", passes:1, aa:true,  conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"120 mm/s",p:"6%",  passes:1, aa:true,  conf:"medium", note:"Very low power for 150W.", source:"Boss Laser community" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"45 mm/s", p:"33%", passes:1, aa:true, conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"25 mm/s", p:"42%", passes:1, aa:true, conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"22 mm/s", p:"42%", passes:1, aa:true, conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"45 mm/s", p:"28%", passes:1, aa:true, conf:"low", note:"Mirror-side DOWN.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"45 mm/s", p:"28%", passes:1, aa:true, conf:"low", note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"50 mm/s", p:"24%", passes:1, aa:true, conf:"medium", note:"", source:"Boss Laser community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"65 mm/s", p:"18%", passes:1, aa:true, conf:"medium", note:"PU only.", source:"Boss Laser community" }
+    ]
+  },
+
+  // ==================== Epilog ====================
+  "epilog-zing-24-30w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"30%", p:"70%", passes:1, aa:false, conf:"high",   note:"Epilog uses % speed / % power. 30W Zing settings from Epilog material guide.", source:"Epilog official material guide" },
+      { op:"Engrave", s:"70%", p:"28%", passes:1, aa:false, conf:"high",   note:"300 DPI recommended for wood engrave.", source:"Epilog official material guide" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"15%", p:"85%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"28%", p:"72%", passes:1, aa:false, conf:"high",   note:"Ventilation essential.", source:"Epilog official material guide" },
+      { op:"Engrave", s:"65%", p:"25%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"12%", p:"88%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"25%", p:"75%", passes:1, aa:false, conf:"high",   note:"Varies by species.", source:"Epilog official material guide" },
+      { op:"Engrave", s:"65%", p:"30%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"20%", p:"80%", passes:1, aa:false, conf:"high",   note:"CO2 cuts all acrylic colors well.", source:"Epilog official material guide" },
+      { op:"Engrave", s:"70%", p:"20%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"10%", p:"90%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"20%", p:"80%", passes:1, aa:false, conf:"low",    note:"Mirror-side DOWN. Use cast acrylic settings as baseline.", source:"Community consensus — Epilog does not publish specific mirror acrylic settings" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"20%", p:"80%", passes:1, aa:false, conf:"low",    note:"Use cast acrylic settings as baseline. Test with ventilation.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"35%", p:"55%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" },
+      { op:"Engrave", s:"75%", p:"22%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"28%", p:"62%", passes:1, aa:false, conf:"medium", note:"", source:"Epilog community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"35%", p:"50%", passes:1, aa:false, conf:"medium", note:"PU only.", source:"Epilog community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"60%", p:"22%", passes:1, aa:false, conf:"high",   note:"Monitor for fire.", source:"Epilog official material guide" },
+      { op:"Engrave", s:"90%", p:"10%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ]
+  },
+
+  "epilog-fusion-edge-50w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"40%", p:"60%", passes:1, aa:false, conf:"high",   note:"Epilog Fusion Edge 50W. From Epilog material guide.", source:"Epilog official material guide" },
+      { op:"Engrave", s:"80%", p:"22%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"20%", p:"78%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"38%", p:"62%", passes:1, aa:false, conf:"high",   note:"Ventilation essential.", source:"Epilog official material guide" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"18%", p:"80%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"32%", p:"65%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"28%", p:"70%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" },
+      { op:"Engrave", s:"80%", p:"16%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"14%", p:"82%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"28%", p:"70%", passes:1, aa:false, conf:"low",    note:"Mirror-side DOWN. Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"28%", p:"70%", passes:1, aa:false, conf:"low",    note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"45%", p:"45%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"38%", p:"50%", passes:1, aa:false, conf:"medium", note:"", source:"Epilog community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"45%", p:"40%", passes:1, aa:false, conf:"medium", note:"PU only.", source:"Epilog community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"70%", p:"18%", passes:1, aa:false, conf:"high",   note:"Monitor for fire.", source:"Epilog official material guide" }
+    ]
+  },
+
+  "epilog-fusion-pro-75w": {
+    "plywood-3mm": [
+      { op:"Cut",     s:"55%", p:"50%", passes:1, aa:false, conf:"high",   note:"Epilog Fusion Pro 75W. From Epilog material guide.", source:"Epilog official material guide" },
+      { op:"Engrave", s:"90%", p:"18%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "plywood-6mm": [
+      { op:"Cut",     s:"28%", p:"68%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "mdf-3mm": [
+      { op:"Cut",     s:"50%", p:"52%", passes:1, aa:false, conf:"high",   note:"Ventilation essential.", source:"Epilog official material guide" }
+    ],
+    "mdf-6mm": [
+      { op:"Cut",     s:"25%", p:"70%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "hardwood-3mm": [
+      { op:"Cut",     s:"42%", p:"55%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "cast-acrylic-3mm": [
+      { op:"Cut",     s:"38%", p:"58%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" },
+      { op:"Engrave", s:"90%", p:"12%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "cast-acrylic-6mm": [
+      { op:"Cut",     s:"20%", p:"72%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "mirror-acrylic-3mm": [
+      { op:"Cut",     s:"38%", p:"58%", passes:1, aa:false, conf:"low",    note:"Mirror-side DOWN. Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "glitter-acrylic-3mm": [
+      { op:"Cut",     s:"38%", p:"58%", passes:1, aa:false, conf:"low",    note:"Cast acrylic baseline.", source:"Community consensus" }
+    ],
+    "veg-tan-leather-2mm": [
+      { op:"Cut",     s:"58%", p:"38%", passes:1, aa:false, conf:"high",   note:"", source:"Epilog official material guide" }
+    ],
+    "veg-tan-leather-3mm": [
+      { op:"Cut",     s:"48%", p:"42%", passes:1, aa:false, conf:"medium", note:"", source:"Epilog community" }
+    ],
+    "leatherette": [
+      { op:"Cut",     s:"58%", p:"34%", passes:1, aa:false, conf:"medium", note:"PU only.", source:"Epilog community" }
+    ],
+    "cardstock": [
+      { op:"Cut",     s:"85%", p:"14%", passes:1, aa:false, conf:"high",   note:"Monitor for fire.", source:"Epilog official material guide" }
+    ]
+  }
+
+}; // end SETTINGS
+
+// ============================================
+// MACHINE KEY MAP (display name → data key)
+// ============================================
+var MACHINE_KEYS = {
+  "xTool D1 Pro 10W":        "xtool-d1-pro-10w",
+  "xTool D1 Pro 20W":        "xtool-d1-pro-20w",
+  "xTool S1 40W":            "xtool-s1-40w",
+  "xTool P2 55W CO2":        "xtool-p2-55w-co2",
+  "xTool M1 (10W diode)":    "xtool-m1-10w-diode",
+  "OMTech 40W CO2":          "omtech-40w-co2",
+  "OMTech 50W CO2":          "omtech-50w-co2",
+  "OMTech 60W CO2":          "omtech-60w-co2",
+  "OMTech 80W CO2":          "omtech-80w-co2",
+  "OMTech 100W CO2":         "omtech-100w-co2",
+  "Glowforge Basic (40W)":   "glowforge-basic-40w",
+  "Glowforge Plus (45W)":    "glowforge-plus-45w",
+  "Glowforge Pro (45W)":     "glowforge-pro-45w",
+  "Sculpfun S9 (5.5W)":      "sculpfun-s9-5-5w",
+  "Sculpfun S30 Pro (10W)":  "sculpfun-s30-pro-10w",
+  "Sculpfun S30 Pro Max (20W)": "sculpfun-s30-pro-max-20w",
+  "Creality Falcon 10W":     "creality-falcon-10w",
+  "Creality Falcon2 22W":    "creality-falcon2-22w",
+  "Creality Falcon2 Pro 40W":"creality-falcon2-pro-40w",
+  "Boss LS-1416 (60W)":      "boss-ls-1416-60w",
+  "Boss LS-1630 (100W)":     "boss-ls-1630-100w",
+  "Boss HP-2436 (150W)":     "boss-hp-2436-150w",
+  "Epilog Zing 24 (30W)":    "epilog-zing-24-30w",
+  "Epilog Fusion Edge (50W)":"epilog-fusion-edge-50w",
+  "Epilog Fusion Pro (75W)": "epilog-fusion-pro-75w"
+};
+
+var GLOWFORGE_MODELS = ["Glowforge Basic (40W)", "Glowforge Plus (45W)", "Glowforge Pro (45W)"];
+var currentBrand = "xtool";
+
+// ============================================
+// UI FUNCTIONS
+// ============================================
+function selectBrand(brand, btn) {
+  currentBrand = brand;
+  document.querySelectorAll('.brand-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+
+  var machineSelect = document.getElementById('sel-machine');
+  machineSelect.innerHTML = '<option value="">— Select model —</option>';
+  BRANDS[brand].models.forEach(function(m) {
+    var opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    machineSelect.appendChild(opt);
+  });
+
+  // Show/hide Glowforge notice
+  document.getElementById('glowforgeNotice').classList.toggle('visible', brand === 'glowforge');
+
+  // Reset result
+  document.getElementById('resultPanel').style.display = 'none';
+  document.getElementById('adAfterResult').style.display = 'none';
+  onSelectionChange();
+}
+
+function onMachineChange() {
+  onSelectionChange();
+}
+
+function onSelectionChange() {
+  document.getElementById('resultPanel').style.display = 'none';
+  document.getElementById('adAfterResult').style.display = 'none';
+}
+
+function getSettings() {
+  var machineName = document.getElementById('sel-machine').value;
+  var material    = document.getElementById('sel-material').value;
+
+  if (!machineName) { alert('Please select a machine model.'); return; }
+  if (!material)    { alert('Please select a material.'); return; }
+
+  var machineKey = MACHINE_KEYS[machineName];
+  if (!machineKey) { showNoData(machineName, material, 'Machine not found in database.'); return; }
+
+  var machineData = SETTINGS[machineKey];
+  if (!machineData) { showNoData(machineName, material, 'No settings data found for this machine.'); return; }
+
+  var entries = machineData[material];
+
+  // Heading
+  var materialLabel = document.getElementById('sel-material').options[document.getElementById('sel-material').selectedIndex].text;
+  document.getElementById('resultHeading').textContent = machineName + ' — ' + materialLabel;
+
+  var cardsDiv = document.getElementById('settingsCards');
+  cardsDiv.innerHTML = '';
+
+  if (!entries || entries.length === 0) {
+    cardsDiv.innerHTML = '<div class="no-data-card"><div class="no-data-icon">📋</div><strong>No manufacturer data available for this combination</strong>The manufacturer does not publish specific settings for ' + materialLabel + ' on the ' + machineName + '. Use the closest equivalent material settings as a starting point and run a test cut. The <a href="laser-settings-troubleshooter.html">Troubleshooter</a> can help if results are off.</div>';
+  } else {
+    entries.forEach(function(entry) {
+      var opClass = entry.op === 'Cut' ? 'op-cut' : entry.op === 'Engrave' ? 'op-engrave' : 'op-score';
+      var confClass = entry.conf === 'high' ? 'conf-high' : entry.conf === 'medium' ? 'conf-medium' : 'conf-low';
+      var confLabel = entry.conf === 'high' ? 'From manufacturer documentation' : entry.conf === 'medium' ? 'From manufacturer app or guide — may vary' : 'Community consensus — manufacturer does not publish this';
+      var aaText = entry.aa ? 'Yes' : (currentBrand === 'glowforge' ? 'N/A' : 'No');
+
+      var card = document.createElement('div');
+      card.className = 'settings-card';
+      card.innerHTML =
+        '<div class="settings-card-header">' +
+          '<span class="op-badge ' + opClass + '">' + entry.op + '</span>' +
+          '<span class="source-tag">' + entry.source + '</span>' +
+        '</div>' +
+        '<div class="settings-grid">' +
+          '<div class="setting-cell"><div class="setting-label">Speed</div><div class="setting-value">' + entry.s + '</div></div>' +
+          '<div class="setting-cell"><div class="setting-label">Power</div><div class="setting-value">' + entry.p + '</div></div>' +
+          '<div class="setting-cell"><div class="setting-label">Passes</div><div class="setting-value">' + entry.passes + '</div></div>' +
+          '<div class="setting-cell"><div class="setting-label">Air Assist</div><div class="setting-value">' + aaText + '</div></div>' +
+        '</div>' +
+        (entry.note ? '<div class="settings-card-note">💡 ' + entry.note + '</div>' : '') +
+        '<div class="confidence-bar"><div class="conf-dot ' + confClass + '"></div>' + confLabel + '</div>';
+      cardsDiv.appendChild(card);
+    });
+  }
+
+  document.getElementById('resultPanel').style.display = 'block';
+  document.getElementById('adAfterResult').style.display = 'flex';
+  document.getElementById('resultPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showNoData(machine, material, reason) {
+  document.getElementById('resultHeading').textContent = machine + ' — ' + material;
+  document.getElementById('settingsCards').innerHTML =
+    '<div class="no-data-card"><div class="no-data-icon">📋</div><strong>' + reason + '</strong>Try the closest equivalent material as a starting point and run a test cut first.</div>';
+  document.getElementById('resultPanel').style.display = 'block';
+}
+
+// Initialize with xTool models on load
+selectBrand('xtool', document.querySelector('.brand-btn.active'));
+
+function toggleFaq(el) { el.parentElement.classList.toggle('open'); }
+function toggleNav()    { document.getElementById('navLinks').classList.toggle('open'); }
+</script>
+
+</body>
+</html>
