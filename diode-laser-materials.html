@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diode Laser Material Compatibility Tool — Can My Diode Laser Cut This?</title>
+  <meta name="description" content="Check if your material is suitable for a diode laser. Covers acrylic colors, wood, leather, metals, and more. Learn why clear acrylic is a poor diode candidate and what materials work best.">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type":"Question","name":"Can a diode laser cut clear acrylic?","acceptedAnswer":{"@type":"Answer","text":"Generally no. Blue diode lasers emit light at a wavelength that passes through clear acrylic rather than being absorbed, so the material does not heat up enough to cut. CO2 lasers are the better choice for clear acrylic."}},
+      {"@type":"Question","name":"What acrylic colors work best with a diode laser?","acceptedAnswer":{"@type":"Answer","text":"Dark opaque colors — especially black — work best because they absorb more of the diode laser's energy. Clear, white, and transparent colored acrylics are poor candidates for diode lasers."}},
+      {"@type":"Question","name":"Can a diode laser cut wood?","acceptedAnswer":{"@type":"Answer","text":"Yes. Basswood and light-colored woods are excellent candidates for diode laser cutting and engraving. Plywood works but results depend on quality and glue type."}},
+      {"@type":"Question","name":"What materials can a 10W diode laser cut?","acceptedAnswer":{"@type":"Answer","text":"A 10W diode laser can typically cut thin basswood (up to 3-4mm), cardstock, paper, thin MDF, and dark acrylic with multiple passes. Results depend on air assist, focus, and material quality."}}
+    ]
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="nav-logo">⬡ Laser<span>Tools</span> HQ</div>
+    <button class="nav-mobile-toggle" onclick="toggleNav()" aria-label="Toggle menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="diode-laser-materials.html" class="active">Material Check</a></li>
+      <li><a href="laser-settings-troubleshooter.html">Troubleshooter</a></li>
+      <li><a href="laser-material-safety-checker.html">Safety Checker</a></li>
+      <li><a href="laser-wattage-chooser.html">Wattage Chooser</a></li>
+      <li><a href="laser-sheet-yield-calculator.html">Sheet Yield</a></li>
+      <li><a href="laser-job-pricing-calculator.html">Pricing</a></li>
+    </ul>
+  </nav>
+
+  <main class="page-wrap">
+
+    <p class="page-eyebrow">Tool 1 · Diode Laser</p>
+    <h1>Diode Laser Material Compatibility</h1>
+    <p class="page-intro">
+      Diode lasers behave very differently from CO2 lasers — especially with acrylic. This tool tells you whether your material is a good candidate for cutting or engraving on a blue diode laser, and what to expect.
+    </p>
+
+    <div class="ad-slot">Advertisement</div>
+
+    <div class="tool-form-card">
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="material-category">Material category</label>
+          <select id="material-category" onchange="onCategoryChange()">
+            <option value="">— Select category —</option>
+            <option value="acrylic">Acrylic / Plastic</option>
+            <option value="wood">Wood</option>
+            <option value="leather">Leather</option>
+            <option value="metal">Coated Metal</option>
+            <option value="paper">Paper / Cardboard</option>
+            <option value="unsafe">Known Unsafe Material</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="material-type">Material type</label>
+          <select id="material-type" onchange="onMaterialChange()">
+            <option value="">— Select category first —</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="laser-wattage">Diode laser wattage (optical output)</label>
+          <select id="laser-wattage">
+            <option value="5">5W</option>
+            <option value="10" selected>10W</option>
+            <option value="20">20W</option>
+            <option value="30">30W</option>
+            <option value="40">40W+</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="operation">Operation</label>
+          <select id="operation">
+            <option value="cut">Cut</option>
+            <option value="engrave">Engrave</option>
+            <option value="mark">Mark / Score</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="thickness">Material thickness</label>
+          <select id="thickness">
+            <option value="1.5">1.5 mm</option>
+            <option value="3" selected>3 mm</option>
+            <option value="6">6 mm</option>
+            <option value="custom">Other / custom</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="air-assist">Air assist</label>
+          <select id="air-assist">
+            <option value="none">None</option>
+            <option value="low">Low / basic</option>
+            <option value="strong" selected>Strong</option>
+          </select>
+        </div>
+
+      </div>
+      <button class="btn-check" onclick="checkCompatibility()">Check compatibility →</button>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div class="result-panel" id="resultPanel">
+      <div class="result-header">
+        <span class="result-badge" id="resultBadge">—</span>
+        <div class="result-header-text">
+          <h3 id="resultTitle">—</h3>
+          <p id="resultSubtitle">—</p>
+        </div>
+      </div>
+      <div class="result-body">
+        <div class="result-section">
+          <h4>What to expect</h4>
+          <p id="resultExpectation">—</p>
+        </div>
+        <div id="wattageNote" class="result-section" style="display:none;">
+          <h4>Wattage note</h4>
+          <p id="wattageNoteText">—</p>
+        </div>
+        <div id="thicknessNote" class="result-section" style="display:none;">
+          <h4>Thickness note</h4>
+          <p id="thicknessNoteText">—</p>
+        </div>
+        <div id="betterLaserSection" class="result-section" style="display:none;">
+          <h4>Better laser type for this material</h4>
+          <p id="betterLaserText">—</p>
+        </div>
+        <div class="result-section">
+          <h4>Safety note</h4>
+          <div id="safetyCallout">—</div>
+        </div>
+        <div class="result-section">
+          <div class="callout tip">
+            <span class="callout-icon">🧪</span>
+            <div><strong>Always run a test first.</strong> Cut a small test grid at varying speed and power on a scrap piece of your exact material batch before running a full job. Material composition varies between suppliers and batches.</div>
+          </div>
+        </div>
+        <div class="result-section">
+          <h4>Related tools</h4>
+          <div class="related-links">
+            <a class="related-link" href="laser-material-safety-checker.html">⚠️ Safety Checker</a>
+            <a class="related-link" href="laser-wattage-chooser.html">⚡ Wattage Chooser</a>
+            <a class="related-link" href="laser-settings-troubleshooter.html">🔧 Troubleshooter</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad-slot" id="adAfterResult" style="display:none;">Advertisement</div>
+
+    <!-- CATEGORY NOTE (non-acrylic) -->
+    <div id="generalCategoryNote" style="margin:32px 0 0;display:none;">
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <p id="generalCategoryText" style="font-size:0.9rem;line-height:1.6;margin:0;"></p>
+      </div>
+    </div>
+
+    <!-- ACRYLIC EXPLAINER -->
+    <div id="acrylicExplainer" style="margin:40px 0 0;display:none;">
+      <h2 style="font-family:var(--font-head);font-size:1.3rem;font-weight:700;letter-spacing:-0.01em;margin-bottom:16px;">Why acrylic is tricky for diode lasers</h2>
+      <p style="color:var(--text-muted);font-size:0.92rem;line-height:1.65;margin-bottom:16px;">
+        CO2 lasers produce infrared light at 10,600nm, which acrylic absorbs very efficiently regardless of color. Blue diode lasers produce visible light at around 445–450nm. Clear and light-colored acrylics transmit much of this wavelength rather than absorbing it — so the material doesn't heat up enough to cut.
+      </p>
+      <p style="color:var(--text-muted);font-size:0.92rem;line-height:1.65;">
+        Dark opaque acrylics absorb more of the diode beam and can cut with enough passes, but results still depend heavily on the exact formulation, thickness, air assist, and focus.
+      </p>
+      <div style="margin-top:24px;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+          <thead>
+            <tr style="background:var(--bg-card);">
+              <th style="text-align:left;padding:10px 14px;border:1px solid var(--border);font-family:var(--font-head);">Acrylic type</th>
+              <th style="text-align:left;padding:10px 14px;border:1px solid var(--border);font-family:var(--font-head);">Diode laser result</th>
+              <th style="text-align:left;padding:10px 14px;border:1px solid var(--border);font-family:var(--font-head);">Better option?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:10px 14px;border:1px solid var(--border);">Clear acrylic</td><td style="padding:10px 14px;border:1px solid var(--border);color:var(--red);">Poor — beam often passes through</td><td style="padding:10px 14px;border:1px solid var(--border);">CO2 laser</td></tr>
+            <tr style="background:var(--bg);"><td style="padding:10px 14px;border:1px solid var(--border);">White acrylic</td><td style="padding:10px 14px;border:1px solid var(--border);color:var(--amber);">Often inconsistent</td><td style="padding:10px 14px;border:1px solid var(--border);">CO2 laser</td></tr>
+            <tr><td style="padding:10px 14px;border:1px solid var(--border);">Black opaque acrylic</td><td style="padding:10px 14px;border:1px solid var(--border);color:var(--green);">Better — absorbs diode energy well</td><td style="padding:10px 14px;border:1px solid var(--border);">—</td></tr>
+            <tr style="background:var(--bg);"><td style="padding:10px 14px;border:1px solid var(--border);">Dark opaque colors</td><td style="padding:10px 14px;border:1px solid var(--border);color:var(--blue);">Possible — test first</td><td style="padding:10px 14px;border:1px solid var(--border);">—</td></tr>
+            <tr><td style="padding:10px 14px;border:1px solid var(--border);">Transparent colored</td><td style="padding:10px 14px;border:1px solid var(--border);color:var(--amber);">Often poor — still transmits beam</td><td style="padding:10px 14px;border:1px solid var(--border);">CO2 laser</td></tr>
+            <tr style="background:var(--bg);"><td style="padding:10px 14px;border:1px solid var(--border);">Mirror acrylic</td><td style="padding:10px 14px;border:1px solid var(--border);color:var(--amber);">Caution — verify backing first</td><td style="padding:10px 14px;border:1px solid var(--border);">Test carefully</td></tr>
+            <tr><td style="padding:10px 14px;border:1px solid var(--border);">Glitter acrylic</td><td style="padding:10px 14px;border:1px solid var(--border);color:var(--amber);">Caution — unknown additives</td><td style="padding:10px 14px;border:1px solid var(--border);">Test carefully</td></tr>
+            <tr style="background:var(--bg);"><td style="padding:10px 14px;border:1px solid var(--border);">Unknown plastic</td><td style="padding:10px 14px;border:1px solid var(--border);color:var(--red);">Do not laser — verify first</td><td style="padding:10px 14px;border:1px solid var(--border);">Identify material first</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="ad-slot" style="margin-top:40px;">Advertisement</div>
+
+    <section class="faq-section">
+      <h2>Frequently asked questions</h2>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can a diode laser cut clear acrylic?</div><div class="faq-a">Generally no. Blue diode lasers emit light at a wavelength (around 445nm) that passes through clear acrylic rather than being absorbed by it. The material doesn't heat up enough to cut. CO2 lasers are the correct tool for clear acrylic.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What acrylic colors work best with a diode laser?</div><div class="faq-a">Dark opaque colors — especially black — work best because they absorb more of the diode laser's blue light. The darker and more opaque the color, the more laser energy the material absorbs. Clear, white, light-colored, and transparent acrylics are poor candidates.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Does wattage help with clear acrylic on a diode?</div><div class="faq-a">Not significantly. The problem is not power but wavelength. Higher wattage will not meaningfully improve absorption if the material is transmitting the beam. More power just risks fire and melting. A CO2 laser is the right solution for clear acrylic.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can a diode laser cut wood?</div><div class="faq-a">Yes. Basswood and similarly light-colored, low-density woods are excellent candidates for diode lasers. Plywood cuts well too, but result quality depends heavily on the grade of plywood and the type of adhesive used between layers. Laser-grade birch ply is the most reliable option.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Is air assist important for diode laser cutting?</div><div class="faq-a">Yes — air assist makes a significant difference. It blows smoke and debris out of the cut path, reduces charring, improves cut quality, and helps prevent fires. Even a basic air pump improves results noticeably compared to no air assist at all.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What is the difference between cast and extruded acrylic for laser cutting?</div><div class="faq-a">Cast acrylic generally cuts and engraves better than extruded acrylic regardless of laser type. Cast acrylic produces cleaner edges and engraves with a frosted finish. Extruded acrylic is cheaper but can melt rather than vaporize cleanly.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Why does this tool say "test first" so often?</div><div class="faq-a">Because laser performance genuinely varies — not just between machine models and wattages, but between material batches from the same supplier. A compatibility rating tells you the expected behavior, but actual results depend on your specific machine, optics condition, focus accuracy, and the exact formulation of your material. A small test grid takes two minutes and saves wasted sheets.</div></div>
+    </section>
+
+  </main>
+
+  <div class="site-disclaimer">
+    These tools provide planning estimates and general educational guidance. Always follow your laser manufacturer's instructions, verify material composition, use proper ventilation and fire safety practices, and test on scrap material before running a real job.
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-logo">⬡ Laser<span>Tools</span> HQ</div>
+      <nav class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="laser-material-safety-checker.html">Safety Checker</a>
+        <a href="laser-wattage-chooser.html">Wattage Chooser</a>
+        <a href="laser-settings-troubleshooter.html">Troubleshooter</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="about.html">About</a>
+      </nav>
+      <p>For planning and educational purposes only. Not a safety certification or machine settings guide.</p>
+    </div>
+  </footer>
+
+<script>
+// ============================================
+// ALL DATA INLINE — no external file dependency
+// ============================================
+
+var MATERIALS = {
+  "cast-acrylic-black": {
+    name: "Cast Acrylic — Black Opaque",
+    diode: {
+      cut:     { rating: "possible" },
+      engrave: { rating: "good" },
+      notes: "Black opaque cast acrylic absorbs diode laser energy better than clear or white. Cutting is possible but depends on thickness and exact formulation. Engraving generally works well. Always test your specific sheet."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Acrylic fumes — use ventilation", "Fire risk at high power"], disclaimer: "Acrylic produces fumes when cut. Ensure adequate ventilation or fume extraction. Never leave the machine unattended." },
+    betterLaserTypes: []
+  },
+  "cast-acrylic-clear": {
+    name: "Cast Acrylic — Clear / Transparent",
+    diode: {
+      cut:     { rating: "not-recommended" },
+      engrave: { rating: "difficult" },
+      notes: "A blue diode laser beam often passes through clear acrylic rather than being absorbed. CO2 is strongly recommended for clear acrylic cutting. Engraving may produce very faint results unless the surface is masked or coated first."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Acrylic fumes — use ventilation", "Fire risk at high power"], disclaimer: "Acrylic produces fumes when cut. Ensure adequate ventilation." },
+    betterLaserTypes: ["CO2"]
+  },
+  "cast-acrylic-white": {
+    name: "Cast Acrylic — White Opaque",
+    diode: {
+      cut:     { rating: "difficult" },
+      engrave: { rating: "difficult" },
+      notes: "White acrylic may reflect or scatter much of the diode laser energy. Results are often inconsistent. Some users have success with multiple slow passes at high power, but this increases charring risk. Test before committing to a project."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Acrylic fumes — use ventilation"], disclaimer: "Acrylic produces fumes when cut. Ensure adequate ventilation." },
+    betterLaserTypes: ["CO2"]
+  },
+  "cast-acrylic-dark-opaque": {
+    name: "Cast Acrylic — Dark Opaque Colors",
+    diode: {
+      cut:     { rating: "possible" },
+      engrave: { rating: "good" },
+      notes: "Darker opaque colors (navy, forest green, dark red, dark purple) absorb diode energy better than light or clear shades. Results vary by exact color and formulation. Run a test grid before a real project."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Acrylic fumes — use ventilation"], disclaimer: "Acrylic produces fumes when cut. Ensure adequate ventilation." },
+    betterLaserTypes: []
+  },
+  "cast-acrylic-transparent-colored": {
+    name: "Cast Acrylic — Transparent Colored",
+    diode: {
+      cut:     { rating: "difficult" },
+      engrave: { rating: "not-recommended" },
+      notes: "Transparent colored acrylic may still transmit too much diode laser energy, depending on color depth and formulation. Darker transparent colors perform better than lighter ones, but results are inconsistent. CO2 is the better choice."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Acrylic fumes — use ventilation"], disclaimer: "Acrylic produces fumes when cut. Ensure adequate ventilation." },
+    betterLaserTypes: ["CO2"]
+  },
+  "mirror-acrylic": {
+    name: "Mirror Acrylic",
+    diode: {
+      cut:     { rating: "caution" },
+      engrave: { rating: "caution" },
+      notes: "Mirror acrylic has a metallic backing that reflects the laser beam and can vary in composition. The backing and coating materials affect both performance and fume safety. Check the supplier data sheet. Test on a small piece away from your eyes and face first."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Unknown backing composition", "Possible metallic fumes", "Beam reflection risk"], disclaimer: "Reflective surfaces can redirect laser beams. Never look at or near a reflective surface during laser operation." },
+    betterLaserTypes: []
+  },
+  "glitter-acrylic": {
+    name: "Glitter Acrylic",
+    diode: {
+      cut:     { rating: "caution" },
+      engrave: { rating: "caution" },
+      notes: "Glitter fillers and unknown additives can affect cutting quality, produce unexpected fumes, and cause rough edges. The glitter particles may be metallic or plastic. Test cautiously with good ventilation."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Unknown glitter filler composition", "Possible metallic particulates", "Rough edges and debris"], disclaimer: "Verify glitter filler composition with your supplier before lasering." },
+    betterLaserTypes: []
+  },
+  "unknown-plastic": {
+    name: "Unknown Plastic / Acrylic",
+    diode: {
+      cut:     { rating: "unsafe" },
+      engrave: { rating: "unsafe" },
+      notes: "Do not assume an unknown plastic is safe to laser. Many plastics — including PVC, ABS, polycarbonate, and foam-core boards — release toxic or corrosive fumes when cut. Verify the material and check safety data before lasering."
+    },
+    safety: { status: "do-not-laser", label: "Unknown / do not assume safe", hazards: ["Possible chlorine gas (PVC)", "Possible toxic fumes (ABS)", "Unknown fire risk"], disclaimer: "NEVER laser an unknown plastic. Identify the material completely before use." },
+    betterLaserTypes: []
+  },
+  "basswood": {
+    name: "Basswood",
+    diode: {
+      cut:     { rating: "good" },
+      engrave: { rating: "good" },
+      notes: "Basswood is one of the most diode-laser-friendly woods. It is light, consistent in density, and cuts cleanly with good air assist. Excellent for ornaments, signs, and craft items."
+    },
+    safety: { status: "generally-laserable", label: "Generally laserable with precautions", hazards: ["Wood smoke — use ventilation", "Fire risk — monitor closely"], disclaimer: "All wood cutting produces smoke. Use ventilation and never leave the machine unattended." },
+    betterLaserTypes: []
+  },
+  "plywood": {
+    name: "Plywood (craft/birch)",
+    diode: {
+      cut:     { rating: "possible" },
+      engrave: { rating: "good" },
+      notes: "Laser-grade birch plywood cuts reasonably well on higher-power diodes (10W+). Standard construction plywood contains voids and glue layers that can cause inconsistent cuts and produce additional fumes from adhesives. Use laser-grade ply when possible."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Glue fumes from adhesive layers", "Wood smoke", "Fire risk"], disclaimer: "Plywood adhesive fumes can be harmful. Use proper ventilation." },
+    betterLaserTypes: []
+  },
+  "mdf": {
+    name: "MDF (Medium Density Fiberboard)",
+    diode: {
+      cut:     { rating: "possible" },
+      engrave: { rating: "good" },
+      notes: "MDF engraves very consistently due to its uniform density. Cutting is possible on higher-wattage diodes but MDF contains formaldehyde-based binders that produce significant fumes. Strong ventilation or fume extraction is essential."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Formaldehyde from binders", "Fine particulate dust", "Fire risk"], disclaimer: "MDF cutting produces formaldehyde-containing fumes. Use a fume extractor with carbon filtration." },
+    betterLaserTypes: []
+  },
+  "veg-tan-leather": {
+    name: "Vegetable-Tanned Leather",
+    diode: {
+      cut:     { rating: "good" },
+      engrave: { rating: "good" },
+      notes: "Vegetable-tanned leather is the preferred type for laser cutting. It cuts cleanly and engraves with excellent contrast. Results vary by thickness and tannin content."
+    },
+    safety: { status: "generally-laserable", label: "Generally laserable with precautions", hazards: ["Leather smoke — use ventilation"], disclaimer: "Leather produces smoke when cut. Use ventilation." },
+    betterLaserTypes: []
+  },
+  "chrome-tanned-leather": {
+    name: "Chrome-Tanned Leather",
+    diode: {
+      cut:     { rating: "caution" },
+      engrave: { rating: "caution" },
+      notes: "Chrome-tanned leather may release hexavalent chromium compounds when lasered, which are toxic. Avoid unless you can confirm the tanning process and have proper extraction. Opt for vegetable-tanned leather when possible."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["Possible chromium fumes (toxic)", "Leather smoke"], disclaimer: "Chrome-tanned leather may release hazardous fumes. Verify with supplier and use fume extraction." },
+    betterLaserTypes: []
+  },
+  "faux-leather": {
+    name: "Faux Leather / PU Leather",
+    diode: {
+      cut:     { rating: "caution" },
+      engrave: { rating: "caution" },
+      notes: "Faux leather is a broad category. PU (polyurethane) faux leather is generally considered safer to laser than PVC-based faux leather. PVC releases chlorine-containing toxic gases. Always confirm the material is PU and not PVC before lasering."
+    },
+    safety: { status: "caution", label: "Use caution / verify composition", hazards: ["PVC-based faux leather releases chlorine gas (toxic)", "Unknown coatings and backing materials"], disclaimer: "Do not laser PVC-based faux leather. Confirm the material is PU, not PVC, before use." },
+    betterLaserTypes: []
+  },
+  "anodized-aluminum": {
+    name: "Anodized Aluminum",
+    diode: {
+      cut:     { rating: "not-recommended" },
+      engrave: { rating: "good" },
+      notes: "Anodized aluminum cannot be cut by diode lasers but marks and engraves very well. The laser removes the colored anodized layer to reveal the silver aluminum beneath, creating high-contrast permanent marks. Excellent for name tags, badges, and personalized items."
+    },
+    safety: { status: "generally-laserable", label: "Generally laserable with precautions", hazards: ["Aluminum oxide dust — use ventilation"], disclaimer: "Use ventilation when engraving metal. Do not breathe metal dust or fumes." },
+    betterLaserTypes: ["Fiber (for deep engraving)"]
+  },
+  "cardstock-paper": {
+    name: "Cardstock / Paper",
+    diode: {
+      cut:     { rating: "good" },
+      engrave: { rating: "good" },
+      notes: "Paper and cardstock cut easily on even low-powered diodes. Watch for fire risk — paper ignites easily. Use good air assist to blow away sparks and monitor the cut closely. Avoid coated or glossy papers with unknown coatings."
+    },
+    safety: { status: "generally-laserable", label: "Generally laserable with precautions", hazards: ["High fire risk", "Paper smoke and particulates"], disclaimer: "Paper is a fire risk. Never leave the machine unattended. Use air assist." },
+    betterLaserTypes: []
+  },
+  "pvc-vinyl": {
+    name: "PVC / Vinyl",
+    diode: {
+      cut:     { rating: "unsafe" },
+      engrave: { rating: "unsafe" },
+      notes: "PVC and vinyl release hydrochloric acid gas when lasered — a toxic and corrosive fume that is dangerous to inhale and will damage your laser's optics and electronics. This is one of the most important materials to avoid."
+    },
+    safety: { status: "do-not-laser", label: "Do not laser", hazards: ["Hydrochloric acid gas (toxic, corrosive)", "Damages laser optics and electronics", "Serious health risk"], disclaimer: "NEVER laser PVC or vinyl. The fumes are toxic and will corrode your machine." },
+    betterLaserTypes: []
+  },
+  "abs-plastic": {
+    name: "ABS Plastic",
+    diode: {
+      cut:     { rating: "unsafe" },
+      engrave: { rating: "unsafe" },
+      notes: "ABS melts rather than cuts cleanly and releases cyanide-containing fumes when burned. It also tends to warp and produce rough, fire-prone results. Avoid entirely."
+    },
+    safety: { status: "do-not-laser", label: "Do not laser", hazards: ["Cyanide-containing fumes (toxic)", "Melts badly — fire risk", "Corrosive to machine internals"], disclaimer: "NEVER laser ABS. Fumes are toxic. Use cast acrylic instead." },
+    betterLaserTypes: []
+  }
+};
+
+var RATING_CONFIG = {
+  "good":            { label: "Good candidate",              cssClass: "badge-good",           icon: "✓" },
+  "possible":        { label: "Possible — test first",       cssClass: "badge-possible",        icon: "◑" },
+  "difficult":       { label: "Difficult for diode",         cssClass: "badge-difficult",       icon: "△" },
+  "caution":         { label: "Caution — verify first",      cssClass: "badge-caution",         icon: "⚠" },
+  "not-recommended": { label: "Not recommended",             cssClass: "badge-not-recommended", icon: "✕" },
+  "unsafe":          { label: "Do not laser / safety risk",  cssClass: "badge-unsafe",          icon: "✕" }
+};
+
+var CATEGORY_MATERIALS = {
+  acrylic: [
+    { id: "cast-acrylic-black",               name: "Black opaque acrylic" },
+    { id: "cast-acrylic-clear",               name: "Clear / transparent acrylic" },
+    { id: "cast-acrylic-white",               name: "White acrylic" },
+    { id: "cast-acrylic-dark-opaque",         name: "Dark opaque colors (navy, dark red, etc.)" },
+    { id: "cast-acrylic-transparent-colored", name: "Transparent colored acrylic" },
+    { id: "mirror-acrylic",                   name: "Mirror acrylic" },
+    { id: "glitter-acrylic",                  name: "Glitter acrylic" },
+    { id: "unknown-plastic",                  name: "Unknown plastic / unlabeled acrylic" }
+  ],
+  wood:    [
+    { id: "basswood", name: "Basswood" },
+    { id: "plywood",  name: "Plywood (craft/birch)" },
+    { id: "mdf",      name: "MDF (medium density fiberboard)" }
+  ],
+  leather: [
+    { id: "veg-tan-leather",       name: "Vegetable-tanned leather" },
+    { id: "chrome-tanned-leather", name: "Chrome-tanned leather" },
+    { id: "faux-leather",          name: "Faux / PU leather" }
+  ],
+  metal:   [ { id: "anodized-aluminum", name: "Anodized aluminum" } ],
+  paper:   [ { id: "cardstock-paper",   name: "Cardstock / paper" } ],
+  unsafe:  [
+    { id: "pvc-vinyl",   name: "PVC / vinyl" },
+    { id: "abs-plastic", name: "ABS plastic" }
+  ]
+};
+
+var CATEGORY_NOTES = {
+  wood:    "Wood absorbs diode laser energy well, especially lighter woods like basswood. Density, knots, grain direction, and glue layers in plywood all affect cut quality. Laser-grade materials always outperform construction-grade.",
+  leather: "Vegetable-tanned leather is the gold standard for laser cutting. Chrome-tanned and faux leathers introduce chemical variables that may produce hazardous fumes — always verify the tanning or composition method before lasering.",
+  metal:   "Diode lasers cannot cut metal but can mark and engrave coated or anodized metals well. The laser removes a surface coating rather than cutting the material itself.",
+  paper:   "Paper and cardstock are among the easiest diode laser materials. The main risk is fire — paper ignites easily, so always use air assist and never leave the machine unattended.",
+  unsafe:  "These materials are flagged as unsafe or do-not-laser for important reasons. Please read the result carefully before attempting to cut or engrave them."
+};
+
+function onCategoryChange() {
+  var cat = document.getElementById('material-category').value;
+  var typeSelect = document.getElementById('material-type');
+
+  // Rebuild material dropdown
+  typeSelect.innerHTML = '<option value="">— Select material —</option>';
+  if (cat && CATEGORY_MATERIALS[cat]) {
+    CATEGORY_MATERIALS[cat].forEach(function(m) {
+      var opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name;
+      typeSelect.appendChild(opt);
+    });
+  }
+
+  // Hide result panel
+  document.getElementById('resultPanel').classList.remove('visible');
+  document.getElementById('adAfterResult').style.display = 'none';
+
+  // Show/hide explainers
+  var acrylicDiv = document.getElementById('acrylicExplainer');
+  var noteDiv    = document.getElementById('generalCategoryNote');
+  var noteText   = document.getElementById('generalCategoryText');
+
+  if (cat === 'acrylic') {
+    acrylicDiv.style.display = 'block';
+    noteDiv.style.display    = 'none';
+  } else if (cat && CATEGORY_NOTES[cat]) {
+    acrylicDiv.style.display = 'none';
+    noteDiv.style.display    = 'block';
+    noteText.textContent     = CATEGORY_NOTES[cat];
+  } else {
+    acrylicDiv.style.display = 'none';
+    noteDiv.style.display    = 'none';
+  }
+}
+
+function onMaterialChange() {
+  document.getElementById('resultPanel').classList.remove('visible');
+  document.getElementById('adAfterResult').style.display = 'none';
+}
+
+function checkCompatibility() {
+  var materialId = document.getElementById('material-type').value;
+  var operation  = document.getElementById('operation').value;
+  var wattage    = parseInt(document.getElementById('laser-wattage').value);
+  var thickness  = document.getElementById('thickness').value;
+  var airAssist  = document.getElementById('air-assist').value;
+
+  if (!materialId) {
+    alert('Please select a material category and material type first.');
+    return;
+  }
+
+  var mat = MATERIALS[materialId];
+  if (!mat) { alert('Material data not found. Please try again.'); return; }
+
+  var opKey  = (operation === 'mark') ? 'engrave' : operation;
+  var diode  = mat.diode;
+  var rating = diode[opKey] ? diode[opKey].rating : diode.cut.rating;
+  var rc     = RATING_CONFIG[rating];
+
+  // Badge
+  var badge = document.getElementById('resultBadge');
+  badge.textContent = rc.icon + ' ' + rc.label;
+  badge.className   = 'result-badge ' + rc.cssClass;
+
+  // Header
+  var opLabel = operation === 'cut' ? 'Cutting' : operation === 'engrave' ? 'Engraving' : 'Marking';
+  document.getElementById('resultTitle').textContent    = mat.name + ' — ' + opLabel;
+  document.getElementById('resultSubtitle').textContent = 'Diode laser · ' + wattage + 'W · ' + (thickness !== 'custom' ? thickness + 'mm' : 'custom thickness');
+  document.getElementById('resultExpectation').textContent = diode.notes;
+
+  // Wattage note
+  var wn = document.getElementById('wattageNote');
+  var wt = document.getElementById('wattageNoteText');
+  if (wattage <= 5 && (rating === 'possible' || rating === 'difficult')) {
+    wn.style.display = 'block';
+    wt.textContent = 'At 5W optical output, cutting performance will be limited even for compatible materials. Multiple slow passes and strong air assist are essential. Consider a higher-wattage diode or a CO2 laser for production use.';
+  } else if (wattage >= 20 && rating === 'possible') {
+    wn.style.display = 'block';
+    wt.textContent = 'At ' + wattage + 'W you have more power to work with, which may improve results — but wattage alone doesn\'t overcome wavelength absorption issues. Test first.';
+  } else {
+    wn.style.display = 'none';
+  }
+
+  // Thickness note
+  var tn = document.getElementById('thicknessNote');
+  var tt = document.getElementById('thicknessNoteText');
+  if (thickness === '6' && (rating === 'possible' || rating === 'difficult')) {
+    tn.style.display = 'block';
+    tt.textContent = 'At 6mm, even compatible materials become significantly harder to cut on a diode laser. Multiple passes, slow speed, and strong air assist are required. Thinner material (1.5–3mm) will give more reliable results.';
+  } else if (thickness === 'custom') {
+    tn.style.display = 'block';
+    tt.textContent = 'For custom thicknesses, start with your thinnest available scrap piece to find settings that work, then adjust for your actual material thickness.';
+  } else {
+    tn.style.display = 'none';
+  }
+
+  // Better laser type
+  var bl = document.getElementById('betterLaserSection');
+  var bt = document.getElementById('betterLaserText');
+  if (mat.betterLaserTypes && mat.betterLaserTypes.length > 0) {
+    bl.style.display = 'block';
+    bt.textContent   = mat.betterLaserTypes.join(', ') + ' laser(s) are generally better suited to this material. See the Wattage Chooser to compare laser types.';
+  } else {
+    bl.style.display = 'none';
+  }
+
+  // Safety callout
+  var safety = mat.safety;
+  var calloutClass = 'callout info';
+  var calloutIcon  = 'ℹ️';
+  if (safety.status === 'do-not-laser')        { calloutClass = 'callout danger';  calloutIcon = '🚫'; }
+  else if (safety.status === 'caution')         { calloutClass = 'callout warning'; calloutIcon = '⚠️'; }
+  else if (safety.status === 'generally-laserable') { calloutClass = 'callout tip'; calloutIcon = '✅'; }
+
+  var hazardList = safety.hazards.map(function(h){ return '• ' + h; }).join('<br>');
+  var safetyHTML = '<div class="' + calloutClass + '"><span class="callout-icon">' + calloutIcon + '</span><div><strong>' + safety.label + '</strong><br>' + safety.disclaimer + '<br><br>' + hazardList + '</div></div>';
+
+  if (airAssist === 'none' && (rating === 'good' || rating === 'possible')) {
+    safetyHTML += '<div class="callout warning" style="margin-top:10px;"><span class="callout-icon">💨</span><div><strong>No air assist selected.</strong> Air assist significantly improves cut quality, reduces charring, and lowers fire risk. Even a basic air pump makes a real difference.</div></div>';
+  }
+  document.getElementById('safetyCallout').innerHTML = safetyHTML;
+
+  // Show result
+  document.getElementById('resultPanel').classList.add('visible');
+  document.getElementById('adAfterResult').style.display = 'flex';
+  document.getElementById('resultPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function toggleFaq(el) {
+  el.parentElement.classList.toggle('open');
+}
+
+function toggleNav() {
+  document.getElementById('navLinks').classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
