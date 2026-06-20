@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Material Cost Calculator — Laser Cutter Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --bg-grain: #f5f0e6;
+    --surface: #ffffff;
+    --surface-warm: #fdfaf4;
+    --ink: #1a1614;
+    --ink-soft: #4a4138;
+    --ink-mute: #8b8278;
+    --rule: #e8dfd0;
+    --rule-soft: #f0e9dc;
+    --accent: #c4471c;
+    --accent-soft: #e8a37d;
+    --accent-bg: #fbe8db;
+    --accent-deep: #8a2d10;
+    --good: #4a6b3a;
+    --warn: #b8842b;
+    --bad: #a83232;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.5;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(196,71,28,0.04), transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(196,71,28,0.03), transparent 50%);
+  }
+
+  /* Subtle paper grain */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.3  0 0 0 0 0.2  0 0 0 0.06 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+  }
+
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== Header ===== */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 2.5rem;
+  }
+  .brand-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .brand-line .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 0.6rem;
+    transform: translateY(-1px);
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 144;
+  }
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+  .tagline {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    margin-top: 0.6rem;
+    max-width: 36ch;
+  }
+
+  /* ===== Unit toggle ===== */
+  .unit-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+  }
+  .unit-toggle-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .toggle {
+    display: inline-flex;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .toggle button {
+    border: none;
+    background: transparent;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.4rem 0.95rem;
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--ink-mute);
+    transition: all 0.15s ease;
+  }
+  .toggle button.active {
+    background: var(--ink);
+    color: var(--surface);
+  }
+
+  /* ===== Layout ===== */
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 920px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== Cards ===== */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.75rem 1.75rem 2rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.55rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.4rem;
+    font-variation-settings: "opsz" 36;
+  }
+
+  /* ===== Form fields ===== */
+  .field {
+    margin-bottom: 1rem;
+  }
+  .row {
+    display: grid;
+    gap: 0.85rem;
+  }
+  .row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 480px) {
+    .row.cols-2, .row.cols-3 { grid-template-columns: 1fr; }
+  }
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.01em;
+  }
+  label .hint {
+    font-weight: 400;
+    color: var(--ink-mute);
+    font-size: 0.72rem;
+    margin-left: 0.4rem;
+    letter-spacing: 0;
+  }
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--surface-warm);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.6rem 0.8rem;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+  input[type="number"] {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.92rem;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+  select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' fill='none' stroke='%234a4138' stroke-width='1.5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    padding-right: 2rem;
+    cursor: pointer;
+  }
+
+  .input-with-suffix {
+    position: relative;
+  }
+  .input-with-suffix input {
+    padding-right: 2.5rem;
+  }
+  .input-with-suffix .suffix {
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-mute);
+    pointer-events: none;
+  }
+  .input-with-prefix {
+    position: relative;
+  }
+  .input-with-prefix input {
+    padding-left: 1.6rem;
+  }
+  .input-with-prefix .prefix {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--ink-mute);
+    pointer-events: none;
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .checkbox-row label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  /* Saved materials picker */
+  .saved-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--rule);
+  }
+  button.btn {
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--surface);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  button.btn:hover { background: var(--accent); border-color: var(--accent); }
+  button.btn.ghost {
+    background: transparent;
+    color: var(--ink);
+  }
+  button.btn.ghost:hover { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  button.btn.small {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
+  }
+  button.btn.danger {
+    border-color: var(--bad);
+    color: var(--bad);
+    background: transparent;
+  }
+  button.btn.danger:hover { background: var(--bad); color: var(--surface); }
+
+  /* Pricing collapsible */
+  .pricing-toggle {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .pricing-toggle:hover { color: var(--accent); }
+  .pricing-toggle .arrow {
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  .pricing-toggle.open .arrow { transform: rotate(90deg); }
+  .pricing-body {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--rule);
+    display: none;
+  }
+  .pricing-body.open { display: block; }
+  .field-help {
+    font-size: 0.75rem;
+    color: var(--ink-mute);
+    margin-top: 0.3rem;
+    line-height: 1.4;
+  }
+
+  /* ===== Results panel ===== */
+  .results {
+    position: sticky;
+    top: 1.5rem;
+  }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .preview-section {
+    background: var(--bg-grain);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  .preview-section .preview-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .preview-svg-wrap {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 1rem;
+  }
+  .preview-svg-wrap svg {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+  }
+  .preview-meta {
+    margin-top: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-mute);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .results-body {
+    padding: 1.75rem;
+  }
+  .headline {
+    text-align: center;
+    margin-bottom: 1.6rem;
+    padding-bottom: 1.6rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .headline-num {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(3.5rem, 9vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    font-variation-settings: "opsz" 144;
+  }
+  .headline-num.invalid { color: var(--ink-mute); }
+  .headline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+  .headline-sub {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 0.6rem;
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+  }
+
+  .breakdown {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .breakdown li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+    font-size: 0.92rem;
+  }
+  .breakdown li:last-child { border-bottom: none; }
+  .breakdown .label {
+    color: var(--ink-soft);
+  }
+  .breakdown .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .breakdown .total {
+    margin-top: 0.5rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--rule);
+    font-weight: 600;
+    font-size: 0.98rem;
+  }
+  .breakdown .total .label { color: var(--ink); font-weight: 600; }
+
+  .price-card {
+    margin-top: 1.4rem;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-soft);
+    border-radius: 3px;
+    padding: 1.1rem 1.2rem;
+  }
+  .price-card .price-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--accent-deep);
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .price-card .price-value {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 2rem;
+    color: var(--accent-deep);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variation-settings: "opsz" 144;
+  }
+  .price-card .price-meta {
+    font-size: 0.82rem;
+    color: var(--accent-deep);
+    opacity: 0.85;
+    margin-top: 0.5rem;
+  }
+
+  .order-card {
+    margin-top: 1.4rem;
+    background: var(--bg-grain);
+    border-left: 2px solid var(--ink);
+    padding: 0.9rem 1rem;
+    font-size: 0.88rem;
+  }
+  .order-card .order-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+  }
+  .order-card .order-line:last-child { margin-bottom: 0; font-weight: 600; }
+  .order-card .order-value {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .error-msg {
+    background: #fdeeee;
+    border-left: 2px solid var(--bad);
+    padding: 0.85rem 1rem;
+    font-size: 0.86rem;
+    color: var(--bad);
+    margin-bottom: 1rem;
+    border-radius: 2px;
+  }
+
+  .util-bar {
+    height: 6px;
+    background: var(--rule-soft);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 0.4rem 0 0.2rem;
+  }
+  .util-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--good), var(--accent));
+    transition: width 0.3s ease;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* Modal for save material */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,22,20,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 4px;
+    padding: 1.75rem;
+    max-width: 400px;
+    width: 100%;
+    border: 1px solid var(--rule);
+  }
+  .modal h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1.2rem;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    background: var(--ink);
+    color: var(--surface);
+    padding: 0.75rem 1.25rem;
+    border-radius: 2px;
+    font-size: 0.85rem;
+    z-index: 200;
+    transition: transform 0.3s ease;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand-line"><span class="dot"></span>Laser Cutter Tools / 01</div>
+      <h1>Material <em>Cost</em> Calculator</h1>
+      <p class="tagline">Account for kerf, spacing, and edge margin to find your true cost per piece — and what you should charge.</p>
+    </div>
+    <div class="unit-toggle">
+      <span class="unit-toggle-label">Units</span>
+      <div class="toggle" role="tablist">
+        <button id="unit-in" class="active" data-unit="in">in</button>
+        <button id="unit-mm" data-unit="mm">mm</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- ============ INPUTS ============ -->
+    <div class="inputs">
+
+      <!-- Material -->
+      <div class="card">
+        <span class="section-num">01 / Material</span>
+        <h2 class="section-title">What you're cutting from</h2>
+
+        <div class="saved-row" id="saved-row">
+          <select id="saved-materials">
+            <option value="">— Load saved material —</option>
+          </select>
+          <button class="btn ghost small" id="delete-saved" type="button" style="display:none;">Delete</button>
+        </div>
+
+        <div class="field">
+          <label>Nominal size <span class="hint">what the listing says</span></label>
+          <select id="nominal-preset">
+            <option value="custom">Custom</option>
+            <option value="8,10">8 × 10</option>
+            <option value="8,12">8 × 12</option>
+            <option value="11,14">11 × 14</option>
+            <option value="12,12">12 × 12</option>
+            <option value="12,18">12 × 18</option>
+            <option value="12,20">12 × 20</option>
+            <option value="12,24">12 × 24</option>
+            <option value="18,24">18 × 24</option>
+            <option value="20,30">20 × 30</option>
+            <option value="24,24">24 × 24</option>
+            <option value="24,32">24 × 32</option>
+          </select>
+        </div>
+
+        <div class="row cols-2">
+          <div class="field">
+            <label>Nominal width</label>
+            <div class="input-with-suffix">
+              <input type="number" id="nom-w" step="any" min="0" value="12">
+              <span class="suffix unit-suffix">in</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Nominal height</label>
+            <div class="input-with-suffix">
+              <input type="number" id="nom-h" step="any" min="0" value="12">
+              <span class="suffix unit-suffix">in</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row cols-2">
+          <div class="field">
+            <label>Actual width <span class="hint">measure it</span></label>
+            <div class="input-with-suffix">
+              <input type="number" id="act-w" step="any" min="0" value="11.75">
+              <span class="suffix unit-suffix">in</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Actual height</label>
+            <div class="input-with-suffix">
+              <input type="number" id="act-h" step="any" min="0" value="11.75">
+              <span class="suffix unit-suffix">in</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row cols-2">
+          <div class="field">
+            <label>Cost per sheet</label>
+            <div class="input-with-prefix">
+              <span class="prefix">$</span>
+              <input type="number" id="sheet-cost" step="any" min="0" value="5.00">
+            </div>
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end;">
+            <button class="btn ghost small" id="save-material" type="button" style="width:100%;">Save this material</button>
+          </div>
+        </div>
+
+        <div class="row cols-2">
+          <div class="field">
+            <label>Material type</label>
+            <select id="material-type">
+              <option value="cast-acrylic">Cast acrylic</option>
+              <option value="extruded-acrylic">Extruded acrylic</option>
+              <option value="plywood">Plywood</option>
+              <option value="basswood">Basswood</option>
+              <option value="hardwood">Hardwood</option>
+              <option value="mdf">MDF</option>
+              <option value="draftboard">Draftboard</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Thickness</label>
+            <select id="thickness">
+              <option value="0.0625">1/16" (1.5mm)</option>
+              <option value="0.125" selected>1/8" (3mm)</option>
+              <option value="0.1875">3/16" (5mm)</option>
+              <option value="0.25">1/4" (6mm)</option>
+              <option value="0.375">3/8" (9mm)</option>
+              <option value="0.5">1/2" (12mm)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cut Settings -->
+      <div class="card">
+        <span class="section-num">02 / Cut Settings</span>
+        <h2 class="section-title">Your machine's reality</h2>
+
+        <div class="row cols-3">
+          <div class="field">
+            <label>Kerf <span class="hint">cut width</span></label>
+            <div class="input-with-suffix">
+              <input type="number" id="kerf" step="any" min="0" value="0.006">
+              <span class="suffix unit-suffix">in</span>
+            </div>
+            <div class="field-help" id="kerf-help">Auto-set for material. Edit to match your machine.</div>
+          </div>
+          <div class="field">
+            <label>Spacing <span class="hint">between pieces</span></label>
+            <div class="input-with-suffix">
+              <input type="number" id="spacing" step="any" min="0" value="0.08">
+              <span class="suffix unit-suffix">in</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Edge margin <span class="hint">from sheet edge</span></label>
+            <div class="input-with-suffix">
+              <input type="number" id="margin" step="any" min="0" value="0.12">
+              <span class="suffix unit-suffix">in</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shape -->
+      <div class="card">
+        <span class="section-num">03 / Shape</span>
+        <h2 class="section-title">What you're cutting</h2>
+
+        <div class="field">
+          <label>Shape type</label>
+          <select id="shape-type">
+            <option value="circle">Circle</option>
+            <option value="square">Square</option>
+            <option value="rectangle">Rectangle</option>
+            <option value="rounded-rect">Rounded rectangle</option>
+            <option value="oval">Oval</option>
+            <option value="hexagon">Hexagon</option>
+            <option value="triangle">Triangle (equilateral)</option>
+          </select>
+        </div>
+
+        <div id="shape-fields"></div>
+
+        <div class="field" style="margin-top: 1rem;">
+          <label>Quantity needed <span class="hint">optional</span></label>
+          <input type="number" id="qty-needed" step="1" min="0" placeholder="e.g. 50">
+          <div class="field-help">Tells you how many sheets you'll need for an order.</div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="card">
+        <span class="section-num">04 / Pricing</span>
+        <h2 class="section-title">What to charge</h2>
+        <p style="color:var(--ink-soft);font-size:0.9rem;">Material cost alone isn't your real cost. Add labor, overhead, and margin for what you should actually charge.</p>
+
+        <button class="pricing-toggle" id="pricing-toggle" type="button">
+          <span class="arrow">›</span>
+          <span id="pricing-toggle-label">Add labor, design, packaging, and margin</span>
+        </button>
+
+        <div class="pricing-body" id="pricing-body">
+          <div class="row cols-2">
+            <div class="field">
+              <label>Labor per piece <span class="hint">minutes</span></label>
+              <div class="input-with-suffix">
+                <input type="number" id="labor-min" step="any" min="0" placeholder="0">
+                <span class="suffix">min</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Your hourly rate</label>
+              <div class="input-with-prefix">
+                <span class="prefix">$</span>
+                <input type="number" id="hourly-rate" step="any" min="0" placeholder="20">
+              </div>
+            </div>
+          </div>
+
+          <div class="row cols-2">
+            <div class="field">
+              <label>Design fee <span class="hint">one-time</span></label>
+              <div class="input-with-prefix">
+                <span class="prefix">$</span>
+                <input type="number" id="design-fee" step="any" min="0" placeholder="0">
+              </div>
+            </div>
+            <div class="field">
+              <label>Amortize over <span class="hint">pieces</span></label>
+              <input type="number" id="amortize" step="1" min="1" placeholder="100">
+            </div>
+          </div>
+
+          <div class="row cols-2">
+            <div class="field">
+              <label>Packaging <span class="hint">per piece</span></label>
+              <div class="input-with-prefix">
+                <span class="prefix">$</span>
+                <input type="number" id="packaging" step="any" min="0" placeholder="0">
+              </div>
+            </div>
+            <div class="field">
+              <label>Other overhead <span class="hint">per piece</span></label>
+              <div class="input-with-prefix">
+                <span class="prefix">$</span>
+                <input type="number" id="overhead" step="any" min="0" placeholder="0">
+              </div>
+            </div>
+          </div>
+
+          <div class="row cols-2">
+            <div class="field">
+              <label>Markup mode</label>
+              <select id="markup-mode">
+                <option value="margin">Profit margin (%)</option>
+                <option value="markup">Markup multiplier (×)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label id="markup-label">Target margin</label>
+              <div class="input-with-suffix">
+                <input type="number" id="markup-value" step="any" min="0" placeholder="50">
+                <span class="suffix" id="markup-suffix">%</span>
+              </div>
+              <div class="field-help" id="markup-help">Margin: price = cost ÷ (1 − margin). 50% margin doubles the cost.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ RESULTS ============ -->
+    <div class="results">
+      <div class="result-card" id="result-card">
+        <div class="preview-section">
+          <div class="preview-label">Layout preview</div>
+          <div class="preview-svg-wrap" id="preview-svg-wrap">
+            <svg id="preview-svg" viewBox="0 0 400 300"></svg>
+          </div>
+          <div class="preview-meta">
+            <span id="layout-desc">—</span>
+            <span id="util-text">—</span>
+          </div>
+          <div class="util-bar"><div class="util-fill" id="util-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="results-body">
+          <div id="error-container"></div>
+
+          <div class="headline">
+            <div class="headline-num" id="piece-count">—</div>
+            <div class="headline-label">Pieces per sheet</div>
+            <div class="headline-sub" id="headline-sub"></div>
+          </div>
+
+          <ul class="breakdown" id="cost-breakdown"></ul>
+
+          <div id="price-section"></div>
+
+          <div id="order-section"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Laser Cutter Tools — Material Cost Calculator v1.0</span>
+    <span id="last-saved">Settings saved locally</span>
+  </footer>
+</div>
+
+<!-- Save Material Modal -->
+<div class="modal-backdrop" id="save-modal">
+  <div class="modal">
+    <h3>Save this material</h3>
+    <p style="color:var(--ink-soft);font-size:0.88rem;margin-bottom:1rem;">Give it a name you'll recognize later — like "12×12 cast acrylic, $5".</p>
+    <input type="text" id="save-name" placeholder="Material name" style="width:100%;">
+    <div class="modal-actions">
+      <button class="btn ghost" id="save-cancel" type="button">Cancel</button>
+      <button class="btn" id="save-confirm" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ============================================================
+// CONSTANTS & STATE
+// ============================================================
+const MM_PER_INCH = 25.4;
+
+// Default kerf values in mm by material type + thickness (inches)
+const KERF_DEFAULTS_MM = {
+  'cast-acrylic':     { '0.0625': 0.10, '0.125': 0.15, '0.1875': 0.18, '0.25': 0.20, '0.375': 0.25, '0.5': 0.30 },
+  'extruded-acrylic': { '0.0625': 0.12, '0.125': 0.18, '0.1875': 0.20, '0.25': 0.25, '0.375': 0.30, '0.5': 0.35 },
+  'plywood':          { '0.0625': 0.15, '0.125': 0.18, '0.1875': 0.20, '0.25': 0.25, '0.375': 0.30, '0.5': 0.35 },
+  'basswood':         { '0.0625': 0.13, '0.125': 0.15, '0.1875': 0.18, '0.25': 0.20, '0.375': 0.25, '0.5': 0.30 },
+  'hardwood':         { '0.0625': 0.18, '0.125': 0.22, '0.1875': 0.25, '0.25': 0.30, '0.375': 0.35, '0.5': 0.40 },
+  'mdf':              { '0.0625': 0.18, '0.125': 0.20, '0.1875': 0.22, '0.25': 0.25, '0.375': 0.30, '0.5': 0.35 },
+  'draftboard':       { '0.0625': 0.18, '0.125': 0.20, '0.1875': 0.22, '0.25': 0.25, '0.375': 0.30, '0.5': 0.35 },
+  'other':            { '0.0625': 0.15, '0.125': 0.18, '0.1875': 0.20, '0.25': 0.22, '0.375': 0.27, '0.5': 0.32 }
+};
+
+const STORAGE_KEYS = {
+  state: 'lct_calc_state_v1',
+  materials: 'lct_calc_materials_v1'
+};
+
+// Dynamic shape field templates (dimensions in current unit)
+const SHAPE_FIELDS = {
+  'circle': [{ id: 'diameter', label: 'Diameter', default: { in: 3, mm: 76 } }],
+  'square': [{ id: 'side', label: 'Side length', default: { in: 2, mm: 50 } }],
+  'rectangle': [
+    { id: 'width', label: 'Width', default: { in: 3, mm: 76 } },
+    { id: 'height', label: 'Height', default: { in: 2, mm: 50 } }
+  ],
+  'rounded-rect': [
+    { id: 'width', label: 'Width', default: { in: 3, mm: 76 } },
+    { id: 'height', label: 'Height', default: { in: 2, mm: 50 } },
+    { id: 'corner-r', label: 'Corner radius', default: { in: 0.25, mm: 6 } }
+  ],
+  'oval': [
+    { id: 'width', label: 'Width', default: { in: 3, mm: 76 } },
+    { id: 'height', label: 'Height', default: { in: 2, mm: 50 } }
+  ],
+  'hexagon': [
+    { id: 'flat-width', label: 'Width across flats', default: { in: 2, mm: 50 } }
+  ],
+  'triangle': [
+    { id: 'side', label: 'Side length', default: { in: 2, mm: 50 } }
+  ]
+};
+
+const SHAPES_WITH_ROTATION = ['rectangle', 'rounded-rect', 'oval'];
+
+let currentUnit = 'in';
+let savedMaterials = [];
+
+// ============================================================
+// HELPERS
+// ============================================================
+const $ = (id) => document.getElementById(id);
+
+function toMm(value) {
+  if (currentUnit === 'in') return value * MM_PER_INCH;
+  return value;
+}
+function fromMm(value) {
+  if (currentUnit === 'in') return value / MM_PER_INCH;
+  return value;
+}
+function fmtNum(value, decimals = 3) {
+  if (!isFinite(value)) return '—';
+  return value.toFixed(decimals).replace(/\.?0+$/, '');
+}
+function fmtMoney(value) {
+  if (!isFinite(value) || isNaN(value)) return '—';
+  return '$' + value.toFixed(2);
+}
+function getNum(id, fallback = 0) {
+  const v = parseFloat($(id).value);
+  return isNaN(v) ? fallback : v;
+}
+
+// ============================================================
+// UNIT TOGGLE
+// ============================================================
+function setUnit(unit) {
+  if (unit === currentUnit) return;
+
+  // Convert all dimensional fields
+  const dimensional = ['nom-w', 'nom-h', 'act-w', 'act-h', 'kerf', 'spacing', 'margin'];
+  // Plus all shape fields
+  document.querySelectorAll('.shape-input').forEach(el => dimensional.push(el.id));
+
+  dimensional.forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    const v = parseFloat(el.value);
+    if (isNaN(v)) return;
+    if (unit === 'mm') {
+      el.value = (v * MM_PER_INCH).toFixed(2).replace(/\.?0+$/, '');
+    } else {
+      el.value = (v / MM_PER_INCH).toFixed(4).replace(/\.?0+$/, '');
+    }
+  });
+
+  currentUnit = unit;
+  document.querySelectorAll('.unit-suffix').forEach(el => el.textContent = unit);
+  document.querySelectorAll('.toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.unit === unit);
+  });
+
+  recalc();
+  saveState();
+}
+
+// ============================================================
+// SHAPE FIELDS (DYNAMIC)
+// ============================================================
+function renderShapeFields() {
+  const shape = $('shape-type').value;
+  const fields = SHAPE_FIELDS[shape];
+  const container = $('shape-fields');
+
+  // Save existing values where possible
+  const existing = {};
+  container.querySelectorAll('input').forEach(el => existing[el.dataset.fieldId] = el.value);
+
+  let html = '<div class="row cols-' + Math.min(fields.length, 3) + '">';
+  fields.forEach(f => {
+    const val = existing[f.id] !== undefined ? existing[f.id] : f.default[currentUnit];
+    html += `
+      <div class="field">
+        <label>${f.label}</label>
+        <div class="input-with-suffix">
+          <input type="number" class="shape-input" id="shape-${f.id}" data-field-id="${f.id}" step="any" min="0" value="${val}">
+          <span class="suffix unit-suffix">${currentUnit}</span>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+
+  if (SHAPES_WITH_ROTATION.includes(shape)) {
+    html += `
+      <div class="checkbox-row">
+        <input type="checkbox" id="allow-rotation" checked>
+        <label for="allow-rotation">Allow rotating pieces 90° to fit more</label>
+      </div>
+    `;
+  }
+
+  if (shape === 'hexagon' || shape === 'triangle') {
+    html += `<div class="field-help" style="margin-top:0.6rem;">Note: v1 uses bounding-box packing for ${shape}s. True ${shape === 'hexagon' ? 'honeycomb' : 'alternating'} tiling fits more — coming in v2.</div>`;
+  }
+
+  container.innerHTML = html;
+  container.querySelectorAll('input').forEach(el => el.addEventListener('input', () => { recalc(); saveState(); }));
+}
+
+// ============================================================
+// LAYOUT MATH
+// ============================================================
+// All inputs and outputs in mm.
+
+function rectGridLayout(usable_w, usable_h, margin, w, h, kerf, spacing, allowRotation) {
+  function tryOrientation(piece_w, piece_h) {
+    const eff_w = piece_w + kerf;
+    const eff_h = piece_h + kerf;
+    if (eff_w > usable_w || eff_h > usable_h) return { count: 0, cols: 0, rows: 0 };
+    const cols = Math.floor((usable_w + spacing) / (eff_w + spacing));
+    const rows = Math.floor((usable_h + spacing) / (eff_h + spacing));
+    return { count: cols * rows, cols, rows };
+  }
+
+  const a = tryOrientation(w, h);
+  let chosen = { ...a, w, h, rotated: false };
+
+  if (allowRotation && w !== h) {
+    const b = tryOrientation(h, w);
+    if (b.count > a.count) chosen = { ...b, w: h, h: w, rotated: true };
+  }
+
+  const positions = [];
+  for (let r = 0; r < chosen.rows; r++) {
+    for (let c = 0; c < chosen.cols; c++) {
+      positions.push({
+        x: margin + c * (chosen.w + kerf + spacing),
+        y: margin + r * (chosen.h + kerf + spacing),
+        w: chosen.w,
+        h: chosen.h
+      });
+    }
+  }
+
+  return {
+    count: chosen.count,
+    type: 'grid',
+    cols: chosen.cols,
+    rows: chosen.rows,
+    rotated: chosen.rotated,
+    positions,
+    pieceArea: chosen.w * chosen.h
+  };
+}
+
+function circleLayout(usable_w, usable_h, margin, diameter, kerf, spacing) {
+  const D_eff = diameter + kerf;
+  if (D_eff > usable_w || D_eff > usable_h) {
+    return { count: 0, type: 'grid', cols: 0, rows: 0, positions: [], pieceArea: 0 };
+  }
+
+  // Grid layout
+  const cols_g = Math.floor((usable_w + spacing) / (D_eff + spacing));
+  const rows_g = Math.floor((usable_h + spacing) / (D_eff + spacing));
+  const count_g = cols_g * rows_g;
+
+  // Hex layout
+  const pitch_x = D_eff + spacing;
+  const pitch_y = pitch_x * Math.sqrt(3) / 2;
+
+  let cols_a = Math.floor((usable_w - D_eff) / pitch_x) + 1;
+  if (cols_a < 0) cols_a = 0;
+  let cols_b = Math.floor((usable_w - D_eff - pitch_x / 2) / pitch_x) + 1;
+  if (cols_b < 0) cols_b = 0;
+  let rows_h = Math.floor((usable_h - D_eff) / pitch_y) + 1;
+  if (rows_h < 0) rows_h = 0;
+  if (rows_h === 0 && D_eff <= usable_h) rows_h = 1;
+
+  const a_rows = Math.ceil(rows_h / 2);
+  const b_rows = Math.floor(rows_h / 2);
+  const count_h = a_rows * cols_a + b_rows * cols_b;
+
+  const pieceArea = Math.PI * (diameter / 2) * (diameter / 2);
+
+  if (count_h > count_g && count_h > 0) {
+    const positions = [];
+    for (let r = 0; r < rows_h; r++) {
+      const isOffset = r % 2 === 1;
+      const cols = isOffset ? cols_b : cols_a;
+      const xOffset = isOffset ? pitch_x / 2 : 0;
+      for (let c = 0; c < cols; c++) {
+        positions.push({
+          cx: margin + D_eff / 2 + xOffset + c * pitch_x,
+          cy: margin + D_eff / 2 + r * pitch_y,
+          r: diameter / 2
+        });
+      }
+    }
+    return { count: count_h, type: 'hex', cols_a, cols_b, rows: rows_h, positions, pieceArea };
+  } else {
+    const positions = [];
+    for (let r = 0; r < rows_g; r++) {
+      for (let c = 0; c < cols_g; c++) {
+        positions.push({
+          cx: margin + D_eff / 2 + c * (D_eff + spacing),
+          cy: margin + D_eff / 2 + r * (D_eff + spacing),
+          r: diameter / 2
+        });
+      }
+    }
+    return { count: count_g, type: 'grid', cols: cols_g, rows: rows_g, positions, pieceArea };
+  }
+}
+
+function calculateLayout() {
+  const sheet_w = toMm(getNum('act-w'));
+  const sheet_h = toMm(getNum('act-h'));
+  const margin = toMm(getNum('margin'));
+  const kerf = toMm(getNum('kerf'));
+  const spacing = toMm(getNum('spacing'));
+
+  const usable_w = sheet_w - 2 * margin;
+  const usable_h = sheet_h - 2 * margin;
+
+  if (usable_w <= 0 || usable_h <= 0) {
+    return { error: 'Edge margin is larger than the sheet. Reduce the margin or use a bigger sheet.' };
+  }
+
+  const shape = $('shape-type').value;
+  const allowRotation = $('allow-rotation') ? $('allow-rotation').checked : false;
+
+  let layout;
+  let pieceArea;
+  let shapeDesc = '';
+
+  if (shape === 'circle') {
+    const d = toMm(getNum('shape-diameter'));
+    if (d <= 0) return { error: 'Enter a valid diameter.' };
+    layout = circleLayout(usable_w, usable_h, margin, d, kerf, spacing);
+    pieceArea = layout.pieceArea;
+    shapeDesc = `${fmtNum(fromMm(d), 2)} ${currentUnit} circle`;
+  } else if (shape === 'square') {
+    const s = toMm(getNum('shape-side'));
+    if (s <= 0) return { error: 'Enter a valid side length.' };
+    layout = rectGridLayout(usable_w, usable_h, margin, s, s, kerf, spacing, false);
+    pieceArea = s * s;
+    shapeDesc = `${fmtNum(fromMm(s), 2)} ${currentUnit} square`;
+  } else if (shape === 'rectangle' || shape === 'rounded-rect' || shape === 'oval') {
+    const w = toMm(getNum('shape-width'));
+    const h = toMm(getNum('shape-height'));
+    if (w <= 0 || h <= 0) return { error: 'Enter valid width and height.' };
+    layout = rectGridLayout(usable_w, usable_h, margin, w, h, kerf, spacing, allowRotation);
+    if (shape === 'oval') pieceArea = Math.PI * (w/2) * (h/2);
+    else if (shape === 'rounded-rect') {
+      const r = toMm(getNum('shape-corner-r', 0));
+      pieceArea = w * h - (4 * r * r - Math.PI * r * r);
+    }
+    else pieceArea = w * h;
+    shapeDesc = `${fmtNum(fromMm(w), 2)}×${fmtNum(fromMm(h), 2)} ${currentUnit} ${shape.replace('-', ' ')}`;
+  } else if (shape === 'hexagon') {
+    const fw = toMm(getNum('shape-flat-width'));
+    if (fw <= 0) return { error: 'Enter a valid hexagon width.' };
+    // Bounding box: width = fw, height = fw * 2/sqrt(3) ≈ 1.155 fw
+    const bbHeight = fw * 2 / Math.sqrt(3);
+    layout = rectGridLayout(usable_w, usable_h, margin, fw, bbHeight, kerf, spacing, true);
+    pieceArea = (3 * Math.sqrt(3) / 2) * Math.pow(fw / Math.sqrt(3), 2);
+    shapeDesc = `${fmtNum(fromMm(fw), 2)} ${currentUnit} hexagon`;
+  } else if (shape === 'triangle') {
+    const s = toMm(getNum('shape-side'));
+    if (s <= 0) return { error: 'Enter a valid side length.' };
+    const triHeight = s * Math.sqrt(3) / 2;
+    layout = rectGridLayout(usable_w, usable_h, margin, s, triHeight, kerf, spacing, true);
+    pieceArea = (Math.sqrt(3) / 4) * s * s;
+    shapeDesc = `${fmtNum(fromMm(s), 2)} ${currentUnit} triangle`;
+  }
+
+  if (!layout || layout.count === 0) {
+    return { error: 'Shape too large to fit on the sheet with current settings.' };
+  }
+
+  const sheetArea = sheet_w * sheet_h;
+  const utilization = (pieceArea * layout.count) / sheetArea;
+
+  return {
+    layout,
+    sheetW: sheet_w,
+    sheetH: sheet_h,
+    margin,
+    utilization,
+    shapeDesc,
+    shape,
+    pieceArea
+  };
+}
+
+// ============================================================
+// PRICING MATH
+// ============================================================
+function calculatePricing(piecesPerSheet) {
+  const sheetCost = getNum('sheet-cost');
+  const materialPerPiece = piecesPerSheet > 0 ? sheetCost / piecesPerSheet : 0;
+
+  const laborMin = getNum('labor-min');
+  const hourlyRate = getNum('hourly-rate');
+  const laborPerPiece = (laborMin / 60) * hourlyRate;
+
+  const designFee = getNum('design-fee');
+  const amortize = Math.max(1, getNum('amortize', 1));
+  const designPerPiece = designFee / amortize;
+
+  const packagingPerPiece = getNum('packaging');
+  const overheadPerPiece = getNum('overhead');
+
+  const totalCost = materialPerPiece + laborPerPiece + designPerPiece + packagingPerPiece + overheadPerPiece;
+
+  const markupMode = $('markup-mode').value;
+  const markupValue = getNum('markup-value');
+  let suggestedPrice = NaN;
+  let profit = NaN;
+
+  if (markupValue > 0) {
+    if (markupMode === 'margin') {
+      const m = markupValue / 100;
+      if (m < 1) suggestedPrice = totalCost / (1 - m);
+    } else {
+      suggestedPrice = totalCost * markupValue;
+    }
+    profit = suggestedPrice - totalCost;
+  }
+
+  return {
+    materialPerPiece,
+    laborPerPiece,
+    designPerPiece,
+    packagingPerPiece,
+    overheadPerPiece,
+    totalCost,
+    suggestedPrice,
+    profit,
+    sheetCost
+  };
+}
+
+// ============================================================
+// VISUAL PREVIEW (SVG)
+// ============================================================
+function renderPreview(result) {
+  const svg = $('preview-svg');
+  if (!result || result.error) {
+    svg.innerHTML = `
+      <rect x="20" y="20" width="360" height="260" fill="none" stroke="#e8dfd0" stroke-width="2" stroke-dasharray="6 4" rx="4"/>
+      <text x="200" y="155" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="14" fill="#8b8278">No preview</text>
+    `;
+    return;
+  }
+
+  const { sheetW, sheetH, layout, margin, shape } = result;
+  const VB_W = 400, VB_H = 300;
+  const PAD = 16;
+  const sheetAspect = sheetW / sheetH;
+  const boxAspect = (VB_W - 2 * PAD) / (VB_H - 2 * PAD);
+
+  let drawW, drawH;
+  if (sheetAspect > boxAspect) {
+    drawW = VB_W - 2 * PAD;
+    drawH = drawW / sheetAspect;
+  } else {
+    drawH = VB_H - 2 * PAD;
+    drawW = drawH * sheetAspect;
+  }
+  const offsetX = (VB_W - drawW) / 2;
+  const offsetY = (VB_H - drawH) / 2;
+  const scale = drawW / sheetW;
+
+  const t = (x) => offsetX + x * scale;
+  const ty = (y) => offsetY + y * scale;
+  const ts = (v) => v * scale;
+
+  let parts = [];
+  // Sheet outline
+  parts.push(`<rect x="${offsetX}" y="${offsetY}" width="${drawW}" height="${drawH}" fill="#fdfaf4" stroke="#1a1614" stroke-width="1.2"/>`);
+  // Inner margin guide
+  parts.push(`<rect x="${t(margin)}" y="${ty(margin)}" width="${ts(sheetW - 2 * margin)}" height="${ts(sheetH - 2 * margin)}" fill="none" stroke="#8b8278" stroke-width="0.4" stroke-dasharray="2 2"/>`);
+
+  // Shapes
+  layout.positions.forEach(p => {
+    if (shape === 'circle') {
+      parts.push(`<circle cx="${t(p.cx)}" cy="${ty(p.cy)}" r="${ts(p.r)}" fill="#fbe8db" stroke="#c4471c" stroke-width="0.7"/>`);
+    } else if (shape === 'oval') {
+      parts.push(`<ellipse cx="${t(p.x + p.w/2)}" cy="${ty(p.y + p.h/2)}" rx="${ts(p.w/2)}" ry="${ts(p.h/2)}" fill="#fbe8db" stroke="#c4471c" stroke-width="0.7"/>`);
+    } else if (shape === 'rounded-rect') {
+      const r = Math.min(toMm(getNum('shape-corner-r', 0)), p.w/2, p.h/2);
+      parts.push(`<rect x="${t(p.x)}" y="${ty(p.y)}" width="${ts(p.w)}" height="${ts(p.h)}" rx="${ts(r)}" fill="#fbe8db" stroke="#c4471c" stroke-width="0.7"/>`);
+    } else if (shape === 'hexagon') {
+      const cx = t(p.x + p.w/2), cy = ty(p.y + p.h/2);
+      const w = ts(p.w), h = ts(p.h);
+      const points = [
+        [cx, cy - h/2],
+        [cx + w/2, cy - h/4],
+        [cx + w/2, cy + h/4],
+        [cx, cy + h/2],
+        [cx - w/2, cy + h/4],
+        [cx - w/2, cy - h/4]
+      ].map(p => p.join(',')).join(' ');
+      parts.push(`<polygon points="${points}" fill="#fbe8db" stroke="#c4471c" stroke-width="0.7"/>`);
+    } else if (shape === 'triangle') {
+      const cx = t(p.x + p.w/2), top = ty(p.y);
+      const left = t(p.x), right = t(p.x + p.w), bottom = ty(p.y + p.h);
+      parts.push(`<polygon points="${cx},${top} ${right},${bottom} ${left},${bottom}" fill="#fbe8db" stroke="#c4471c" stroke-width="0.7"/>`);
+    } else {
+      parts.push(`<rect x="${t(p.x)}" y="${ty(p.y)}" width="${ts(p.w)}" height="${ts(p.h)}" fill="#fbe8db" stroke="#c4471c" stroke-width="0.7"/>`);
+    }
+  });
+
+  svg.innerHTML = parts.join('');
+}
+
+// ============================================================
+// RENDER RESULTS
+// ============================================================
+function recalc() {
+  const result = calculateLayout();
+  const errBox = $('error-container');
+
+  // Visual preview
+  renderPreview(result);
+
+  if (result.error) {
+    errBox.innerHTML = `<div class="error-msg">${result.error}</div>`;
+    $('piece-count').textContent = '—';
+    $('piece-count').classList.add('invalid');
+    $('headline-sub').textContent = '';
+    $('cost-breakdown').innerHTML = '';
+    $('price-section').innerHTML = '';
+    $('order-section').innerHTML = '';
+    $('layout-desc').textContent = '—';
+    $('util-text').textContent = '—';
+    $('util-fill').style.width = '0%';
+    return;
+  }
+
+  errBox.innerHTML = '';
+  const piecesPerSheet = result.layout.count;
+  const pricing = calculatePricing(piecesPerSheet);
+
+  $('piece-count').textContent = piecesPerSheet;
+  $('piece-count').classList.remove('invalid');
+
+  // Layout description
+  let layoutText = '';
+  if (result.layout.type === 'hex') {
+    layoutText = `Hex packing — ${result.layout.rows} rows`;
+  } else if (result.layout.type === 'grid') {
+    layoutText = `${result.layout.cols} × ${result.layout.rows} grid`;
+    if (result.layout.rotated) layoutText += ' (rotated)';
+  }
+  $('headline-sub').textContent = `${result.shapeDesc} · ${layoutText}`;
+
+  $('layout-desc').textContent = layoutText;
+  const utilPct = Math.round(result.utilization * 100);
+  $('util-text').textContent = `${utilPct}% used`;
+  $('util-fill').style.width = utilPct + '%';
+
+  // Cost breakdown
+  const items = [];
+  items.push({ label: 'Material per piece', value: fmtMoney(pricing.materialPerPiece) });
+  if (pricing.laborPerPiece > 0) items.push({ label: 'Labor per piece', value: fmtMoney(pricing.laborPerPiece) });
+  if (pricing.designPerPiece > 0) items.push({ label: 'Design (amortized)', value: fmtMoney(pricing.designPerPiece) });
+  if (pricing.packagingPerPiece > 0) items.push({ label: 'Packaging', value: fmtMoney(pricing.packagingPerPiece) });
+  if (pricing.overheadPerPiece > 0) items.push({ label: 'Overhead', value: fmtMoney(pricing.overheadPerPiece) });
+
+  const hasExtras = items.length > 1;
+  const breakdownHtml = items.map(i =>
+    `<li><span class="label">${i.label}</span><span class="value">${i.value}</span></li>`
+  ).join('') + (hasExtras
+    ? `<li class="total"><span class="label">Total cost per piece</span><span class="value">${fmtMoney(pricing.totalCost)}</span></li>`
+    : '');
+
+  $('cost-breakdown').innerHTML = breakdownHtml;
+
+  // Suggested price card
+  if (isFinite(pricing.suggestedPrice) && pricing.suggestedPrice > 0) {
+    $('price-section').innerHTML = `
+      <div class="price-card">
+        <div class="price-label">Suggested selling price</div>
+        <div class="price-value">${fmtMoney(pricing.suggestedPrice)}</div>
+        <div class="price-meta">Profit per piece: ${fmtMoney(pricing.profit)}</div>
+      </div>
+    `;
+  } else {
+    $('price-section').innerHTML = '';
+  }
+
+  // Order quantity
+  const qty = getNum('qty-needed');
+  if (qty > 0) {
+    const sheets = Math.ceil(qty / piecesPerSheet);
+    const totalMaterial = sheets * pricing.sheetCost;
+    const totalCost = qty * pricing.totalCost;
+    const totalRevenue = isFinite(pricing.suggestedPrice) ? qty * pricing.suggestedPrice : NaN;
+    let html = `
+      <div class="order-card">
+        <div class="order-line"><span>For ${qty} pieces, you need:</span><span class="order-value">${sheets} sheet${sheets === 1 ? '' : 's'}</span></div>
+        <div class="order-line"><span>Material cost</span><span class="order-value">${fmtMoney(totalMaterial)}</span></div>
+        <div class="order-line"><span>Total cost</span><span class="order-value">${fmtMoney(totalCost)}</span></div>
+    `;
+    if (isFinite(totalRevenue)) {
+      html += `<div class="order-line"><span>Revenue at suggested price</span><span class="order-value">${fmtMoney(totalRevenue)}</span></div>`;
+      html += `<div class="order-line"><span>Profit</span><span class="order-value">${fmtMoney(totalRevenue - totalCost)}</span></div>`;
+    }
+    html += '</div>';
+    $('order-section').innerHTML = html;
+  } else {
+    $('order-section').innerHTML = '';
+  }
+}
+
+// ============================================================
+// AUTO-FILL ACTUAL FROM NOMINAL & KERF FROM MATERIAL
+// ============================================================
+function syncNominalToActual() {
+  const nW = getNum('nom-w');
+  const nH = getNum('nom-h');
+  const offset = currentUnit === 'in' ? 0.25 : 6.35; // ~1/4 inch
+  $('act-w').value = Math.max(0, nW - offset);
+  $('act-h').value = Math.max(0, nH - offset);
+}
+
+function applyKerfDefault() {
+  const matType = $('material-type').value;
+  const thickness = $('thickness').value;
+  const kerfMm = (KERF_DEFAULTS_MM[matType] || {})[thickness] || 0.18;
+  const value = currentUnit === 'in' ? kerfMm / MM_PER_INCH : kerfMm;
+  $('kerf').value = parseFloat(value.toFixed(currentUnit === 'in' ? 4 : 2));
+  $('kerf-help').textContent = `Default for ${matType.replace('-', ' ')} at this thickness — adjust to match your machine.`;
+}
+
+// ============================================================
+// SAVED MATERIALS
+// ============================================================
+function loadSavedMaterials() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.materials);
+    savedMaterials = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    savedMaterials = [];
+  }
+  renderSavedMaterialsDropdown();
+}
+
+function persistSavedMaterials() {
+  localStorage.setItem(STORAGE_KEYS.materials, JSON.stringify(savedMaterials));
+}
+
+function renderSavedMaterialsDropdown() {
+  const sel = $('saved-materials');
+  sel.innerHTML = '<option value="">— Load saved material —</option>';
+  savedMaterials.forEach((m, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = m.name;
+    sel.appendChild(opt);
+  });
+}
+
+function applyMaterial(m) {
+  // Stored values are in mm. Convert to current unit on load.
+  $('nom-w').value = parseFloat(fromMm(m.nominalW).toFixed(4)).toString();
+  $('nom-h').value = parseFloat(fromMm(m.nominalH).toFixed(4)).toString();
+  $('act-w').value = parseFloat(fromMm(m.actualW).toFixed(4)).toString();
+  $('act-h').value = parseFloat(fromMm(m.actualH).toFixed(4)).toString();
+  $('sheet-cost').value = m.cost;
+  $('material-type').value = m.materialType;
+  $('thickness').value = m.thickness;
+  $('kerf').value = parseFloat(fromMm(m.kerf).toFixed(currentUnit === 'in' ? 4 : 2)).toString();
+  // Match the preset dropdown to nominal if it matches
+  const presetVal = `${parseFloat(fromMm(m.nominalW).toFixed(4))},${parseFloat(fromMm(m.nominalH).toFixed(4))}`;
+  // No conversion: stored in mm, presets in inches. Just set to custom for safety.
+  $('nominal-preset').value = 'custom';
+  recalc();
+}
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// SAVE FORM STATE (auto-restore)
+// ============================================================
+function saveState() {
+  const state = {
+    unit: currentUnit,
+    fields: {}
+  };
+  document.querySelectorAll('input, select').forEach(el => {
+    if (el.id && !el.id.startsWith('save-')) {
+      state.fields[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+    }
+  });
+  state.shape = $('shape-type').value;
+  // Capture shape inputs by data-field-id
+  state.shapeInputs = {};
+  document.querySelectorAll('.shape-input').forEach(el => {
+    state.shapeInputs[el.dataset.fieldId] = el.value;
+  });
+  state.pricingOpen = $('pricing-body').classList.contains('open');
+  try { localStorage.setItem(STORAGE_KEYS.state, JSON.stringify(state)); } catch (e) {}
+}
+
+function restoreState() {
+  let state;
+  try { state = JSON.parse(localStorage.getItem(STORAGE_KEYS.state) || 'null'); }
+  catch (e) { state = null; }
+  if (!state) return;
+
+  if (state.unit && state.unit !== currentUnit) {
+    // We need to set unit silently (no conversion since stored values are in saved unit)
+    currentUnit = state.unit;
+    document.querySelectorAll('.unit-suffix').forEach(el => el.textContent = currentUnit);
+    document.querySelectorAll('.toggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.unit === currentUnit);
+    });
+  }
+
+  if (state.shape) $('shape-type').value = state.shape;
+  renderShapeFields();
+
+  if (state.fields) {
+    Object.entries(state.fields).forEach(([id, val]) => {
+      const el = $(id);
+      if (!el) return;
+      if (el.type === 'checkbox') el.checked = val;
+      else el.value = val;
+    });
+  }
+  if (state.shapeInputs) {
+    Object.entries(state.shapeInputs).forEach(([fid, val]) => {
+      const el = document.querySelector(`.shape-input[data-field-id="${fid}"]`);
+      if (el) el.value = val;
+    });
+  }
+  if (state.pricingOpen) {
+    $('pricing-body').classList.add('open');
+    $('pricing-toggle').classList.add('open');
+    $('pricing-toggle-label').textContent = 'Hide pricing details';
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  // Render initial shape fields
+  renderShapeFields();
+
+  // Restore prior state
+  restoreState();
+
+  // Unit toggle
+  document.querySelectorAll('.toggle button').forEach(btn => {
+    btn.addEventListener('click', () => setUnit(btn.dataset.unit));
+  });
+
+  // Nominal preset → fills nominal width/height
+  $('nominal-preset').addEventListener('change', (e) => {
+    if (e.target.value === 'custom') return;
+    const [w, h] = e.target.value.split(',').map(parseFloat);
+    if (currentUnit === 'mm') {
+      $('nom-w').value = (w * MM_PER_INCH).toFixed(1);
+      $('nom-h').value = (h * MM_PER_INCH).toFixed(1);
+    } else {
+      $('nom-w').value = w;
+      $('nom-h').value = h;
+    }
+    syncNominalToActual();
+    recalc();
+    saveState();
+  });
+
+  // When nominal changes, auto-update actual (with -0.25" offset)
+  ['nom-w', 'nom-h'].forEach(id => {
+    $(id).addEventListener('input', () => { syncNominalToActual(); recalc(); saveState(); });
+  });
+
+  // Material/thickness → update kerf default
+  $('material-type').addEventListener('change', () => { applyKerfDefault(); recalc(); saveState(); });
+  $('thickness').addEventListener('change', () => { applyKerfDefault(); recalc(); saveState(); });
+
+  // Shape type → re-render fields
+  $('shape-type').addEventListener('change', () => { renderShapeFields(); recalc(); saveState(); });
+
+  // Live recalc on any input
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', () => { recalc(); saveState(); });
+    el.addEventListener('change', () => { recalc(); saveState(); });
+  });
+
+  // Pricing toggle
+  $('pricing-toggle').addEventListener('click', () => {
+    const body = $('pricing-body');
+    const btn = $('pricing-toggle');
+    const isOpen = body.classList.toggle('open');
+    btn.classList.toggle('open');
+    $('pricing-toggle-label').textContent = isOpen ? 'Hide pricing details' : 'Add labor, design, packaging, and margin';
+    saveState();
+  });
+
+  // Markup mode toggle
+  $('markup-mode').addEventListener('change', () => {
+    const mode = $('markup-mode').value;
+    if (mode === 'margin') {
+      $('markup-label').textContent = 'Target margin';
+      $('markup-suffix').textContent = '%';
+      $('markup-help').textContent = 'Margin: price = cost ÷ (1 − margin). 50% margin doubles the cost.';
+    } else {
+      $('markup-label').textContent = 'Markup multiplier';
+      $('markup-suffix').textContent = '×';
+      $('markup-help').textContent = 'Multiplier: price = cost × multiplier. 2× doubles the cost.';
+    }
+    recalc();
+  });
+
+  // Save material modal
+  $('save-material').addEventListener('click', () => {
+    const matType = $('material-type').value.replace('-', ' ');
+    const thickness = $('thickness').selectedOptions[0].text;
+    const w = $('nom-w').value;
+    const h = $('nom-h').value;
+    $('save-name').value = `${w}×${h} ${matType}, $${$('sheet-cost').value}`;
+    $('save-modal').classList.add('open');
+    setTimeout(() => $('save-name').focus(), 50);
+  });
+
+  $('save-cancel').addEventListener('click', () => $('save-modal').classList.remove('open'));
+  $('save-confirm').addEventListener('click', () => {
+    const name = $('save-name').value.trim();
+    if (!name) return;
+    const m = {
+      name,
+      nominalW: toMm(getNum('nom-w')),
+      nominalH: toMm(getNum('nom-h')),
+      actualW: toMm(getNum('act-w')),
+      actualH: toMm(getNum('act-h')),
+      cost: getNum('sheet-cost'),
+      materialType: $('material-type').value,
+      thickness: $('thickness').value,
+      kerf: toMm(getNum('kerf'))
+    };
+    savedMaterials.push(m);
+    persistSavedMaterials();
+    renderSavedMaterialsDropdown();
+    $('save-modal').classList.remove('open');
+    showToast(`Saved: ${name}`);
+  });
+
+  // Saved materials dropdown
+  $('saved-materials').addEventListener('change', (e) => {
+    const idx = parseInt(e.target.value);
+    if (isNaN(idx)) {
+      $('delete-saved').style.display = 'none';
+      return;
+    }
+    applyMaterial(savedMaterials[idx]);
+    $('delete-saved').style.display = '';
+  });
+
+  $('delete-saved').addEventListener('click', () => {
+    const idx = parseInt($('saved-materials').value);
+    if (isNaN(idx)) return;
+    if (!confirm(`Delete "${savedMaterials[idx].name}"?`)) return;
+    savedMaterials.splice(idx, 1);
+    persistSavedMaterials();
+    renderSavedMaterialsDropdown();
+    $('saved-materials').value = '';
+    $('delete-saved').style.display = 'none';
+    showToast('Deleted');
+  });
+
+  // Modal escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') $('save-modal').classList.remove('open');
+    if (e.key === 'Enter' && $('save-modal').classList.contains('open')) $('save-confirm').click();
+  });
+
+  // Load saved materials list
+  loadSavedMaterials();
+
+  // Initial calc
+  recalc();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
