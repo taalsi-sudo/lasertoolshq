@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laser Settings Troubleshooter — Fix Bad Cuts & Engraving Results</title>
+  <meta name="description" content="Tell us what went wrong with your laser cut or engraving and get a prioritized fix list. Covers not cutting through, charring, melting, weak engraving, double lines, and more.">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type":"Question","name":"Why is my laser not cutting through?","acceptedAnswer":{"@type":"Answer","text":"The most common causes are poor focus, dirty optics, insufficient power or too-high speed, and weak or missing air assist. Check focus first, then clean your lens, then adjust speed and power settings."}},
+      {"@type":"Question","name":"Why is my laser engraving too dark or charring?","acceptedAnswer":{"@type":"Answer","text":"Too much heat per pass is the usual cause. Try increasing speed, lowering power slightly, adding more passes at lower settings, improving air assist, or masking the surface before engraving."}},
+      {"@type":"Question","name":"Why is my acrylic melting instead of cutting?","acceptedAnswer":{"@type":"Answer","text":"Melting usually means too much heat dwelling in one spot. Try faster speed, more passes at lower power, and ensure strong air assist. For clear acrylic on a diode laser, the beam may be passing through rather than cutting — CO2 is better suited for clear acrylic."}},
+      {"@type":"Question","name":"Why are there double lines in my laser engraving?","acceptedAnswer":{"@type":"Answer","text":"Double lines are almost always a mechanical issue — loose belts, gantry play, or a scanning offset setting in your software. Check belt tension and gantry movement before adjusting software settings."}}
+    ]
+  }
+  </script>
+
+  <style>
+    /* Symptom selector grid */
+    .symptom-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .symptom-btn {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      font-family: var(--font-body);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .symptom-btn:hover {
+      border-color: var(--orange);
+      background: var(--orange-light);
+    }
+    .symptom-btn.selected {
+      border-color: var(--orange);
+      border-width: 2px;
+      background: var(--orange-light);
+    }
+    .symptom-icon { font-size: 1.4rem; }
+    .symptom-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .symptom-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Fix list */
+    .fix-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .fix-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .fix-item-header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .fix-number {
+      background: var(--orange);
+      color: white;
+      font-family: var(--font-head);
+      font-size: 0.8rem;
+      font-weight: 700;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .fix-number.priority-high   { background: var(--orange); }
+    .fix-number.priority-medium { background: var(--blue); }
+    .fix-number.priority-low    { background: var(--text-muted); }
+    .fix-content { flex: 1; }
+    .fix-title {
+      font-family: var(--font-head);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .fix-desc {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .fix-item-footer {
+      padding: 10px 18px 12px 58px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .fix-action {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .fix-action-detail {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.45;
+    }
+
+    /* Priority legend */
+    .priority-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      align-items: center;
+    }
+    .legend-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* Safety flag */
+    .safety-flag {
+      display: none;
+      margin-bottom: 16px;
+    }
+    .safety-flag.visible { display: block; }
+
+    /* Result summary bar */
+    .result-summary {
+      background: var(--bg-dark);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .result-summary-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .result-summary h3 {
+      font-family: var(--font-head);
+      font-size: 1rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 4px;
+    }
+    .result-summary p {
+      font-size: 0.85rem;
+      color: #AAAAAA;
+      line-height: 1.5;
+    }
+
+    #resultPanel { display: none; }
+    #resultPanel.visible { display: block; }
+
+    @media (max-width: 640px) {
+      .symptom-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 400px) {
+      .symptom-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-logo">⬡ Laser<span>Tools</span> HQ</div>
+  <button class="nav-mobile-toggle" onclick="toggleNav()" aria-label="Toggle menu">☰</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="diode-laser-materials.html">Material Check</a></li>
+    <li><a href="laser-settings-guide.html">Settings Guide</a></li>
+    <li><a href="laser-settings-troubleshooter.html" class="active">Troubleshooter</a></li>
+    <li><a href="laser-material-safety-checker.html">Safety Checker</a></li>
+    <li><a href="laser-wattage-chooser.html">Wattage Chooser</a></li>
+  </ul>
+</nav>
+
+<main class="page-wrap">
+
+  <p class="page-eyebrow">Tool 2 · Troubleshooter</p>
+  <h1>Laser Settings Troubleshooter</h1>
+  <p class="page-intro">
+    Tell us what went wrong and we'll suggest what to check first. Select your symptom, laser type, and material — then get a prioritized fix list ordered by likelihood and ease.
+  </p>
+
+  <div class="ad-slot">Advertisement</div>
+
+  <div class="callout info" style="margin-bottom:20px;">
+    <span class="callout-icon">👇</span>
+    <div>Select your symptom, laser type, and material — then click <strong>Get fix list</strong>. Check the fixes in order — the most likely causes come first.</div>
+  </div>
+
+  <!-- FORM -->
+  <div class="tool-form-card">
+
+    <!-- SYMPTOM -->
+    <div class="form-group" style="margin-bottom:20px;">
+      <label style="margin-bottom:12px;display:block;">What went wrong?</label>
+      <div class="symptom-grid" id="symptomGrid">
+        <button class="symptom-btn" onclick="selectSymptom('not-cutting', this)">
+          <span class="symptom-icon">✂️</span>
+          <span class="symptom-label">Not cutting through</span>
+          <span class="symptom-sub">Material isn't being cut all the way</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('charring', this)">
+          <span class="symptom-icon">🔥</span>
+          <span class="symptom-label">Too much charring / burning</span>
+          <span class="symptom-sub">Excessive dark burn marks on surface</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('melting', this)">
+          <span class="symptom-icon">💧</span>
+          <span class="symptom-label">Melting / gooey edges</span>
+          <span class="symptom-sub">Material melting rather than cutting cleanly</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('weak-engrave', this)">
+          <span class="symptom-icon">👻</span>
+          <span class="symptom-label">Weak / faint engraving</span>
+          <span class="symptom-sub">Engrave is barely visible or too shallow</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('double-lines', this)">
+          <span class="symptom-icon">〰️</span>
+          <span class="symptom-label">Double lines / ghosting</span>
+          <span class="symptom-sub">Lines appear doubled or offset</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('inconsistent', this)">
+          <span class="symptom-icon">🎲</span>
+          <span class="symptom-label">Inconsistent depth</span>
+          <span class="symptom-sub">Cuts deeper in some areas than others</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('soot', this)">
+          <span class="symptom-icon">🖤</span>
+          <span class="symptom-label">Excessive soot / smoke staining</span>
+          <span class="symptom-sub">Black residue all over the material surface</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('rough-edge', this)">
+          <span class="symptom-icon">🪚</span>
+          <span class="symptom-label">Rough / ragged cut edge</span>
+          <span class="symptom-sub">Edges are jagged, torn, or uneven</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('flame-ups', this)">
+          <span class="symptom-icon">🚨</span>
+          <span class="symptom-label">Flame-ups / catching fire</span>
+          <span class="symptom-sub">Material igniting during the cut</span>
+        </button>
+        <button class="symptom-btn" onclick="selectSymptom('smoky-engrave', this)">
+          <span class="symptom-icon">💨</span>
+          <span class="symptom-label">Smoky / hazy engraving</span>
+          <span class="symptom-sub">Smoke is staining or obscuring the engraved area</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="laser-type">Laser type</label>
+        <select id="laser-type" onchange="onInputChange()">
+          <option value="">— Select type —</option>
+          <option value="diode-low">Diode — low power (5–10W)</option>
+          <option value="diode-mid">Diode — mid power (20–30W)</option>
+          <option value="diode-high">Diode — high power (40W+)</option>
+          <option value="co2-low">CO2 — low power (40–60W)</option>
+          <option value="co2-mid">CO2 — mid power (60–80W)</option>
+          <option value="co2-high">CO2 — high power (80W+)</option>
+          <option value="fiber">Fiber laser</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="material-type">Material</label>
+        <select id="material-type" onchange="onInputChange()">
+          <option value="">— Select material —</option>
+          <optgroup label="Wood">
+            <option value="plywood">Plywood</option>
+            <option value="mdf">MDF</option>
+            <option value="hardwood">Hardwood</option>
+            <option value="basswood">Basswood / light wood</option>
+          </optgroup>
+          <optgroup label="Acrylic">
+            <option value="acrylic-clear">Acrylic — clear / transparent</option>
+            <option value="acrylic-opaque">Acrylic — opaque (dark colors)</option>
+            <option value="acrylic-mirror">Mirror acrylic</option>
+          </optgroup>
+          <optgroup label="Leather">
+            <option value="leather">Vegetable-tanned leather</option>
+            <option value="leatherette">Leatherette / faux leather</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="paper">Paper / cardstock</option>
+            <option value="metal-coated">Coated / anodized metal</option>
+            <option value="unknown">Unknown / other</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="air-assist">Air assist</label>
+        <select id="air-assist" onchange="onInputChange()">
+          <option value="">— Select —</option>
+          <option value="none">None</option>
+          <option value="low">Low / basic pump</option>
+          <option value="strong">Strong</option>
+          <option value="unknown">Not sure</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="maintenance">Recent maintenance</label>
+        <select id="maintenance" onchange="onInputChange()">
+          <option value="">— Select —</option>
+          <option value="recently-cleaned">Lens/mirrors cleaned recently</option>
+          <option value="not-cleaned">Not cleaned in a while</option>
+          <option value="never-cleaned">Never cleaned</option>
+          <option value="unknown">Not sure</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-check" onclick="getFixList()" style="margin-top:8px;">Get fix list →</button>
+  </div>
+
+  <!-- RESULT PANEL -->
+  <div id="resultPanel">
+
+    <!-- Safety flag (shown for flame-ups) -->
+    <div class="safety-flag" id="safetyFlag">
+      <div class="callout danger">
+        <span class="callout-icon">🚨</span>
+        <div><strong>Fire safety first.</strong> If your material is catching fire during cuts, stop the job immediately. Never leave your laser unattended during a cut. Keep a fire extinguisher nearby. Address the fixes below before running another job.</div>
+      </div>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="result-summary">
+      <div class="result-summary-icon" id="resultIcon">🔧</div>
+      <div>
+        <h3 id="resultTitle">—</h3>
+        <p id="resultDesc">—</p>
+      </div>
+    </div>
+
+    <!-- Priority legend -->
+    <div class="priority-legend">
+      <strong style="color:var(--text);">Fix priority:</strong>
+      <span class="legend-dot"><span class="dot" style="background:var(--orange);"></span> Check first</span>
+      <span class="legend-dot"><span class="dot" style="background:var(--blue);"></span> Check next</span>
+      <span class="legend-dot"><span class="dot" style="background:var(--text-muted);"></span> If still not fixed</span>
+    </div>
+
+    <!-- Fix list -->
+    <div class="fix-list" id="fixList"></div>
+
+    <!-- Warning disclaimer -->
+    <div class="callout warning" style="margin-bottom:20px;">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>These are diagnostic suggestions, not certified machine settings.</strong> Work through fixes one at a time so you know what made the difference. Always run a small test cut on scrap material after each adjustment before running a full job.</div>
+    </div>
+
+    <!-- Related links -->
+    <div class="result-section">
+      <h4 style="font-family:var(--font-head);font-size:0.82rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">Related tools</h4>
+      <div class="related-links">
+        <a class="related-link" href="laser-settings-guide.html">📋 Settings Guide</a>
+        <a class="related-link" href="diode-laser-materials.html">🔵 Material Compatibility</a>
+        <a class="related-link" href="laser-material-safety-checker.html">⚠️ Safety Checker</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ad-slot" id="adAfterResult" style="display:none;">Advertisement</div>
+
+  <!-- FAQ -->
+  <section class="faq-section" style="margin-top:40px;">
+    <h2>Frequently asked questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What should I check first when my laser isn't cutting through?</div>
+      <div class="faq-a">Focus is almost always the first thing to check. Even being 0.5mm off focus can significantly reduce cutting power. After focus, check that your lens is clean — a dirty lens scatters the beam and dramatically reduces effective power. Then check air assist, slow down your speed, and consider adding passes rather than just maxing out power.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Why does my laser cut better on one side of the bed than the other?</div>
+      <div class="faq-a">This is almost always a bed leveling issue. If the cutting surface isn't flat and level relative to the laser head, focus changes across the work area and cutting power becomes inconsistent. Check your bed height at multiple points and use a honeycomb bed or adjustable risers to level it.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Will increasing power fix a weak cut?</div>
+      <div class="faq-a">Not necessarily, and it can make things worse. Before increasing power, check focus and clean your lens — both have a bigger impact than you'd expect. Maxing out power increases heat, which causes more charring and can actually make cut quality worse. More passes at moderate power usually outperforms one pass at max power.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How often should I clean my laser lens?</div>
+      <div class="faq-a">For regular use, inspect the lens after every few hours of cutting — especially when cutting wood or MDF, which produce a lot of smoke and residue. Clean it whenever you see visible residue, cloudiness, or notice a drop in cutting performance. Use proper lens cleaning solution and lens tissue — never paper towels or household cleaners.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Why does my engraving look fine on one material but terrible on another?</div>
+      <div class="faq-a">Different materials absorb laser energy very differently. Wood grain, MDF density, acrylic color, and leather tanning method all affect how the laser interacts with the surface. Settings that work perfectly on basswood may burn MDF or barely mark hardwood. Always test on the exact material and batch you're using for a real job.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What causes double lines in laser engraving?</div>
+      <div class="faq-a">Double lines are almost always mechanical. The most common cause is loose or stretched belts — the gantry "bounces" slightly between scan passes, offsetting alternate lines. Check belt tension on both axes. The second most common cause is a scanning offset setting in your software (LightBurn calls this "Scanning Offset Adjust") that needs to be calibrated for your speed.</div>
+    </div>
+
+  </section>
+
+</main>
+
+<div class="site-disclaimer">
+  These tools provide diagnostic suggestions and general educational guidance. Always follow your laser manufacturer's instructions, use proper ventilation and fire safety practices, and test on scrap material before running a real job.
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-logo">⬡ Laser<span>Tools</span> HQ</div>
+    <nav class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="diode-laser-materials.html">Material Check</a>
+      <a href="laser-settings-guide.html">Settings Guide</a>
+      <a href="laser-material-safety-checker.html">Safety Checker</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="about.html">About</a>
+    </nav>
+    <p>Diagnostic suggestions only. Not a certified machine settings guide.</p>
+  </div>
+</footer>
+
+<script>
+// ============================================
+// STATE
+// ============================================
+var selectedSymptom = null;
+
+function selectSymptom(id, btn) {
+  selectedSymptom = id;
+  document.querySelectorAll('.symptom-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  onInputChange();
+}
+
+function onInputChange() {
+  document.getElementById('resultPanel').style.display = 'none';
+  document.getElementById('adAfterResult').style.display = 'none';
+}
+
+// ============================================
+// FIX DATABASE
+// Each fix: { title, desc, action, detail, priority: 'high'|'medium'|'low' }
+// Conditions can add/remove fixes based on laser type, material, air assist, maintenance
+// ============================================
+
+var FIXES = {
+
+  // ---- NOT CUTTING THROUGH ----
+  "not-cutting": {
+    icon: "✂️",
+    title: "Not Cutting Through",
+    desc: "Most likely a focus, optics, or energy delivery problem. Work through these in order.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Check and reset your focus",
+        desc: "Focus is the single most common reason a laser stops cutting cleanly. Even 0.5–1mm off focus can cut effective power by 30–50%.",
+        action: "Re-focus the laser head at the exact surface of your material.",
+        detail: "Use your machine's focus tool or manual focus card. If your material has warped or isn't flat, it may be out of focus in different areas across the bed."
+      },
+      {
+        priority: "high",
+        title: "Clean your lens (and mirrors if CO2)",
+        desc: "Residue on the lens scatters and absorbs the beam before it reaches the material. A dirty lens can reduce effective power dramatically.",
+        action: "Inspect the lens — hold it up to a light source. If you see any residue, haze, or spots, clean it.",
+        detail: "Use proper lens cleaning solution and lens tissue. Never use paper towels or household cleaners. CO2 machines also need mirror inspection — check all mirrors in the beam path."
+      },
+      {
+        priority: "high",
+        title: "Slow down your speed",
+        desc: "Too-high speed means the beam doesn't dwell long enough to cut through. Reduce speed by 20–30% and test.",
+        action: "Reduce cutting speed by 20–30% and run a test cut on scrap.",
+        detail: "Don't jump straight to maximum power — more passes at moderate power usually beats one pass at max power for cut quality."
+      },
+      {
+        priority: "medium",
+        title: "Add a second pass",
+        desc: "Multiple passes allow the material to cool between cuts and often produce cleaner results than one high-power pass.",
+        action: "Add one more pass at the same settings before changing power.",
+        detail: "2–3 passes at moderate settings is usually better than 1 pass at maximum. Excessive passes increase charring, so there's a balance."
+      },
+      {
+        priority: "medium",
+        title: "Check material compatibility with your laser type",
+        desc: "Some materials simply don't cut well on certain laser types — especially clear acrylic on diode lasers.",
+        action: "Use the Material Compatibility tool to confirm this material is a good candidate for your laser.",
+        detail: "Clear and transparent acrylics transmit diode laser beams instead of absorbing them. No amount of power adjustment will fix a fundamental wavelength mismatch."
+      },
+      {
+        priority: "low",
+        title: "Check for bed leveling issues",
+        desc: "If the cut is worse in some areas than others, the bed may not be level — causing focus to drift across the work area.",
+        action: "Measure focus height at the corners and center of your bed.",
+        detail: "Use a honeycomb bed or adjustable risers to level the cutting surface. Even 1–2mm of variation across the bed causes noticeable power inconsistency."
+      }
+    ],
+    conditional: [
+      {
+        condition: function(lt, mat, aa, maint) { return aa === 'none' || aa === 'low'; },
+        fix: {
+          priority: "high",
+          title: "Improve air assist",
+          desc: "Air assist blows debris and smoke out of the cut path, allowing the beam to reach fresh material on each pass. Without it, smoke residue absorbs laser energy before it hits the material.",
+          action: "Add or increase air assist and retest.",
+          detail: "Even a basic aquarium pump makes a measurable difference. Strong air assist is especially important for wood and MDF."
+        },
+        insertAt: 2
+      },
+      {
+        condition: function(lt, mat, aa, maint) { return maint === 'not-cleaned' || maint === 'never-cleaned'; },
+        fix: {
+          priority: "high",
+          title: "Your lens may need cleaning urgently",
+          desc: "You indicated the lens hasn't been cleaned recently. This is the most likely culprit for a sudden drop in cutting performance.",
+          action: "Clean the lens before anything else.",
+          detail: "A heavily contaminated lens can reduce effective cutting power by 40–60%. Cleaning it often restores performance without any settings changes."
+        },
+        insertAt: 0
+      },
+      {
+        condition: function(lt, mat, aa, maint) { return mat === 'acrylic-clear' && (lt === 'diode-low' || lt === 'diode-mid' || lt === 'diode-high'); },
+        fix: {
+          priority: "high",
+          title: "Clear acrylic is a poor candidate for diode lasers",
+          desc: "Blue diode laser beams pass through clear acrylic rather than being absorbed. This is a wavelength issue, not a settings issue.",
+          action: "Switch to dark opaque acrylic, or use a CO2 laser for clear acrylic.",
+          detail: "No diode power setting will reliably cut clear acrylic. CO2 lasers cut all acrylic colors cleanly. See the Material Compatibility tool for more detail."
+        },
+        insertAt: 0
+      },
+      {
+        condition: function(lt, mat, aa, maint) { return mat === 'plywood'; },
+        fix: {
+          priority: "medium",
+          title: "Check your plywood grade",
+          desc: "Construction-grade plywood contains voids and harder glue layers that block laser cutting. The beam gets stopped by glue and the cut becomes inconsistent.",
+          action: "Switch to laser-grade or Baltic birch plywood.",
+          detail: "Laser-grade ply has consistent layers, minimal voids, and laser-compatible adhesive. Standard hardware store plywood is unreliable for laser cutting."
+        },
+        insertAt: 4
+      }
+    ]
+  },
+
+  // ---- CHARRING ----
+  "charring": {
+    icon: "🔥",
+    title: "Too Much Charring / Burning",
+    desc: "Too much heat is dwelling in the material. The goal is less heat per pass, not less total energy.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Increase your speed",
+        desc: "Slower speed means the beam dwells longer in one spot, depositing more heat. Speed up and the beam moves on before the material over-heats.",
+        action: "Increase speed by 20–30% and test on a scrap piece.",
+        detail: "If increasing speed means you're no longer cutting through, add a second pass rather than slowing back down."
+      },
+      {
+        priority: "high",
+        title: "Improve or add air assist",
+        desc: "Air assist blows combustion gases away from the cut zone and cools the material surface. Without it, heat builds up and causes charring.",
+        action: "Add or increase air assist — even a basic pump makes a significant difference.",
+        detail: "Strong air assist is one of the most effective ways to reduce charring on wood. It also reduces fire risk."
+      },
+      {
+        priority: "high",
+        title: "Mask the surface before cutting",
+        desc: "Transfer tape or painter's tape on the surface protects it from smoke and combustion residue during cutting.",
+        action: "Apply transfer tape or low-tack painter's tape to the material surface before cutting.",
+        detail: "Peel the tape after cutting. This is especially effective for engraving and for cutting plywood and MDF where surface charring is a constant issue."
+      },
+      {
+        priority: "medium",
+        title: "Use more passes at lower power",
+        desc: "Instead of one slow, high-power pass, try two faster passes at lower power. Each pass removes less material and deposits less heat.",
+        action: "Reduce power by 15–20%, increase speed, and add a second pass.",
+        detail: "This approach reduces peak temperature at the cut zone and often produces cleaner edges with less charring."
+      },
+      {
+        priority: "medium",
+        title: "Check ventilation",
+        desc: "Poor ventilation allows smoke and combustion gases to linger around the material, staining the surface and contributing to charring.",
+        action: "Ensure your exhaust fan is working and the duct is clear. Run the exhaust during the entire job.",
+        detail: "Even a well-tuned laser produces excessive surface charring if exhaust gases aren't being removed quickly."
+      },
+      {
+        priority: "low",
+        title: "Consider the material",
+        desc: "Some materials char more than others. MDF and pine char heavily due to resins and binders. Baltic birch and basswood char much less.",
+        action: "If switching materials is an option, lighter-colored, lower-resin woods produce less charring.",
+        detail: "For acrylic, melting/discoloration rather than charring is more typical — if you're seeing char on acrylic, check if the material is truly cast acrylic."
+      }
+    ],
+    conditional: [
+      {
+        condition: function(lt, mat) { return mat === 'mdf'; },
+        fix: {
+          priority: "medium",
+          title: "MDF chars heavily — this is partly normal",
+          desc: "MDF contains formaldehyde-based binders that produce a lot of smoke and char more than natural wood. Masking, strong air assist, and fast speed help but won't eliminate it entirely.",
+          action: "Use transfer tape masking and ensure strong air assist and ventilation.",
+          detail: "For very clean MDF results, consider switching to laser-grade MDF which uses lower-emission binders."
+        },
+        insertAt: 3
+      },
+      {
+        condition: function(lt, mat) { return mat === 'leather' || mat === 'leatherette'; },
+        fix: {
+          priority: "high",
+          title: "Leather scorches easily — speed is critical",
+          desc: "Leather burns at relatively low temperatures. Even a slightly too-slow speed causes heavy surface scorching.",
+          action: "Increase speed significantly and test. Leather often needs faster settings than you'd expect.",
+          detail: "For engraving, reduce power and increase speed. A light engrave pass is better than a deep one on leather."
+        },
+        insertAt: 0
+      }
+    ]
+  },
+
+  // ---- MELTING ----
+  "melting": {
+    icon: "💧",
+    title: "Melting / Gooey Edges",
+    desc: "The material is receiving too much sustained heat, causing it to melt rather than vaporize cleanly.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Increase speed to reduce heat dwell time",
+        desc: "Melting happens when the material heats up faster than it can vaporize. Moving faster gives less time for heat to build up.",
+        action: "Increase speed by 20–30% and add a pass if needed to compensate.",
+        detail: "For acrylic especially: a faster speed with more passes nearly always outperforms a slow single pass."
+      },
+      {
+        priority: "high",
+        title: "Improve air assist",
+        desc: "Air assist cools the material at the cut zone and blows molten material away before it re-solidifies on the edge.",
+        action: "Add or strengthen air assist.",
+        detail: "Strong air assist is critical for clean acrylic cutting. It cools the cut edge and dramatically reduces melting and re-flow."
+      },
+      {
+        priority: "high",
+        title: "Reduce power",
+        desc: "Too much power concentrates excessive heat at the cut point. Try reducing power by 10–15% and compensating with an extra pass.",
+        action: "Lower power by 10–15%, increase speed slightly, add a pass.",
+        detail: "The goal is to vaporize material cleanly, not to blast through it. Lower peak heat with more passes is the key principle."
+      },
+      {
+        priority: "medium",
+        title: "Check focus",
+        desc: "Surprisingly, being out of focus can cause melting — the defocused beam covers a wider area, heating more material at once rather than vaporizing a precise cut line.",
+        action: "Verify focus is set correctly for this material and thickness.",
+        detail: "A focused beam vaporizes material efficiently. An unfocused beam spreads heat, causing melting and ragged edges."
+      },
+      {
+        priority: "low",
+        title: "Let the material cool between passes",
+        desc: "Running multiple passes back-to-back without pause doesn't allow the material to cool, causing heat to accumulate.",
+        action: "Add a small delay between passes if your software supports it.",
+        detail: "In LightBurn, you can set a pass delay. Alternatively, run the same job twice instead of using the passes setting."
+      }
+    ],
+    conditional: [
+      {
+        condition: function(lt, mat) { return mat === 'acrylic-clear' && (lt === 'diode-low' || lt === 'diode-mid' || lt === 'diode-high'); },
+        fix: {
+          priority: "high",
+          title: "Clear acrylic + diode laser = beam passing through, not cutting",
+          desc: "What looks like melting on clear acrylic with a diode laser may actually be scattered beam energy heating the surface without cutting through. The beam is transmitting through the material, not being absorbed.",
+          action: "Switch to dark opaque acrylic for diode lasers, or use a CO2 laser for clear acrylic.",
+          detail: "CO2 lasers cut all acrylic colors with clean, flame-polished edges. See the Material Compatibility tool."
+        },
+        insertAt: 0
+      },
+      {
+        condition: function(lt, mat) { return mat === 'acrylic-opaque' || mat === 'acrylic-clear' || mat === 'acrylic-mirror'; },
+        fix: {
+          priority: "medium",
+          title: "Use cast acrylic, not extruded",
+          desc: "Extruded acrylic melts at a lower temperature and tends to produce gooey, uneven edges. Cast acrylic vaporizes more cleanly.",
+          action: "Switch to cast acrylic if you aren't already using it.",
+          detail: "Cast acrylic produces the characteristic frosted or flame-polished edge. Extruded acrylic produces melted, inconsistent edges."
+        },
+        insertAt: 3
+      },
+      {
+        condition: function(lt, mat) { return mat === 'leatherette'; },
+        fix: {
+          priority: "high",
+          title: "Verify this is PU leatherette, not PVC",
+          desc: "PVC-based faux leather melts, produces toxic fumes, and is unsafe to laser. If the material is melting and smells sharp or acidic, stop immediately.",
+          action: "Do not continue until you've confirmed the material is PU, not PVC. Use the Safety Checker tool.",
+          detail: "PVC releases hydrochloric acid gas when lasered. This is a health and machine safety issue, not just a settings problem."
+        },
+        insertAt: 0
+      }
+    ]
+  },
+
+  // ---- WEAK ENGRAVING ----
+  "weak-engrave": {
+    icon: "👻",
+    title: "Weak / Faint Engraving",
+    desc: "Not enough energy is being delivered to the surface. Work through focus and optics before touching power settings.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Check focus first",
+        desc: "An out-of-focus beam spreads its energy over a larger area, making engravings faint and lacking contrast. Even 0.5mm off focus makes a visible difference.",
+        action: "Re-focus the laser at the exact surface of the material and retest.",
+        detail: "For engraving, focus at the top surface of the material. For deeper engraving, some users focus slightly below the surface — but start at the top."
+      },
+      {
+        priority: "high",
+        title: "Clean the lens",
+        desc: "A dirty lens scatters the beam and reduces the energy delivered to the material surface.",
+        action: "Clean the lens with proper lens solution and lens tissue and retest.",
+        detail: "Even a thin film of residue on the lens can noticeably reduce engraving depth and contrast."
+      },
+      {
+        priority: "high",
+        title: "Reduce speed",
+        desc: "Too-high speed means the beam doesn't dwell long enough to mark the material effectively.",
+        action: "Reduce engraving speed by 20–30% and compare results.",
+        detail: "For engraving, speed has a bigger effect on depth than power in most cases. Slow down before increasing power."
+      },
+      {
+        priority: "medium",
+        title: "Check material color and surface",
+        desc: "Light-colored, reflective, or shiny surfaces absorb less laser energy. Some materials need surface preparation to engrave well.",
+        action: "For light or reflective surfaces: apply a laser marking spray, or switch to a more absorbent material.",
+        detail: "Dark materials absorb more laser energy. Shiny or mirror-like surfaces reflect the beam. Anodized metals engrave well; bare polished metal does not."
+      },
+      {
+        priority: "medium",
+        title: "Increase power slightly",
+        desc: "After checking focus and optics, a moderate power increase may be needed for this material.",
+        action: "Increase power by 10–15% and test. Don't jump straight to maximum.",
+        detail: "Maxing out power can cause burning around engraved areas. A 10–15% increase is usually enough to see whether power is the limiting factor."
+      },
+      {
+        priority: "low",
+        title: "Consider material compatibility",
+        desc: "Some materials simply don't engrave well with certain laser types. Clear acrylic on a diode laser, or bare metal on any non-fiber laser, won't produce visible results.",
+        action: "Check the Material Compatibility tool to confirm this material is a good fit for your laser type.",
+        detail: ""
+      }
+    ],
+    conditional: [
+      {
+        condition: function(lt, mat) { return mat === 'acrylic-clear' && (lt === 'diode-low' || lt === 'diode-mid' || lt === 'diode-high'); },
+        fix: {
+          priority: "high",
+          title: "Clear acrylic doesn't engrave well on diode lasers",
+          desc: "Diode lasers transmit through clear acrylic rather than being absorbed. The result is very faint or no visible engraving.",
+          action: "Apply a laser marking spray to the surface, switch to dark opaque acrylic, or use a CO2 laser.",
+          detail: "Laser marking spray (like Cermark or similar) can allow diode lasers to mark surfaces they normally can't."
+        },
+        insertAt: 0
+      },
+      {
+        condition: function(lt, mat) { return mat === 'metal-coated'; },
+        fix: {
+          priority: "high",
+          title: "Metal marking requires the right laser type",
+          desc: "Diode and CO2 lasers can mark anodized or coated metals by removing the coating layer. Bare metal requires a fiber laser or marking spray.",
+          action: "Confirm your material has an anodized or coated surface. Bare polished metal needs a fiber laser or marking spray.",
+          detail: "Anodized aluminum engraves well on both diode and CO2. If results are faint, the anodizing may be thinner than expected — increase power slightly."
+        },
+        insertAt: 1
+      }
+    ]
+  },
+
+  // ---- DOUBLE LINES ----
+  "double-lines": {
+    icon: "〰️",
+    title: "Double Lines / Ghosting",
+    desc: "Almost always a mechanical or software calibration issue, not a power or speed problem.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Check belt tension on both axes",
+        desc: "Loose or worn belts allow the gantry to shift slightly between scan passes, offsetting alternate lines. This is the most common cause of double lines.",
+        action: "Check belt tension on the X and Y axes. Belts should feel firm — not floppy, not guitar-string tight.",
+        detail: "Pluck each belt — it should produce a low tone, not a slack flop. Tighten any belts that feel loose. Replace belts that look stretched or cracked."
+      },
+      {
+        priority: "high",
+        title: "Check for gantry play or loose wheels",
+        desc: "If the gantry carriage has any side-to-side or front-to-back play, it will shift during direction changes, causing double lines.",
+        action: "Grip the laser head and try to wobble it gently in all directions. Any movement indicates loose wheels or eccentric nuts that need tightening.",
+        detail: "Most diode and CO2 machines use V-slot wheels with eccentric nuts. Adjust the nuts to remove play without over-tightening."
+      },
+      {
+        priority: "high",
+        title: "Calibrate scanning offset in software",
+        desc: "At high engraving speeds, the laser fires slightly late on alternate scan passes due to signal delay. This creates a consistent offset between odd and even lines.",
+        action: "In LightBurn: go to Edit → Device Settings → Scanning Offset Adjust. Run the calibration pattern and enter the measured offset.",
+        detail: "This is especially noticeable at high speeds (3000mm/min+). Lower your engraving speed and check if the double lines reduce — if they do, scanning offset is the cause."
+      },
+      {
+        priority: "medium",
+        title: "Reduce engraving speed",
+        desc: "Very high engraving speeds amplify mechanical slop and scanning offset. Reducing speed often makes double lines disappear.",
+        action: "Reduce engraving speed by 30–40% and test.",
+        detail: "If double lines go away at lower speed, you can either keep the lower speed or properly calibrate scanning offset for your target speed."
+      },
+      {
+        priority: "medium",
+        title: "Check that the lens or module is fully secured",
+        desc: "A loose laser module, lens holder, or focus assembly can vibrate and shift slightly during engraving, causing offset between passes.",
+        action: "Ensure all mounting screws for the laser head, module, and lens are tightened.",
+        detail: ""
+      },
+      {
+        priority: "low",
+        title: "Check for interference or signal issues",
+        desc: "On some machines, electrical interference can cause erratic firing timing, which manifests as double or offset lines.",
+        action: "Ensure USB cables are properly connected and not routed near power cables. Try a different USB port or cable.",
+        detail: "Grounding issues can also cause this on some CO2 machines — consult your machine's documentation."
+      }
+    ],
+    conditional: []
+  },
+
+  // ---- INCONSISTENT DEPTH ----
+  "inconsistent": {
+    icon: "🎲",
+    title: "Inconsistent Cut/Engrave Depth",
+    desc: "The laser is delivering different amounts of energy across different areas of the same job.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Check bed leveling",
+        desc: "If the bed isn't level, focus changes across the work area — the laser is closer to the material in some spots and further in others.",
+        action: "Measure focus height at the four corners and center of your bed. Adjust until consistent.",
+        detail: "Use a focus tool or feeler gauge at multiple points. Even 1–2mm of bed height variation causes visible differences in cut depth."
+      },
+      {
+        priority: "high",
+        title: "Check for material warping",
+        desc: "Warped or bowed material causes the focus distance to vary across its surface, even if the bed is perfectly level.",
+        action: "Flatten the material before cutting. Use hold-down pins, magnets, or weights around the edges.",
+        detail: "Thin plywood and MDF are especially prone to warping. Store materials flat and allow them to acclimate to your workspace."
+      },
+      {
+        priority: "high",
+        title: "Clean all mirrors in the beam path (CO2 machines)",
+        desc: "Dirty mirrors in a CO2 laser reduce beam quality differently at different mirror angles, causing power variation across the cutting area.",
+        action: "Inspect and clean all mirrors in the beam path.",
+        detail: "Power drop at the far corners of the bed (the 'sweet spot' problem) is often a mirror alignment or cleanliness issue on CO2 machines."
+      },
+      {
+        priority: "medium",
+        title: "Check material consistency",
+        desc: "Inconsistent material density causes depth variation even with a perfectly consistent laser. Plywood voids, MDF clumping, and leather grain all contribute.",
+        action: "Test on a known-consistent material to rule out laser issues. If the test is consistent, the problem is the material.",
+        detail: "Laser-grade ply and premium MDF are manufactured to tighter tolerances than construction-grade materials."
+      },
+      {
+        priority: "medium",
+        title: "Check beam alignment (CO2 machines)",
+        desc: "On CO2 machines, if the beam isn't aligned to the center of all mirrors and the lens, power delivery varies with head position.",
+        action: "Perform a beam alignment check using pulse-test burn paper at each mirror.",
+        detail: "Beam alignment is a more advanced procedure — refer to your machine's documentation or manufacturer guides."
+      },
+      {
+        priority: "low",
+        title: "Check power supply stability",
+        desc: "An aging or failing laser power supply can deliver inconsistent power, especially at high output levels.",
+        action: "If all other checks pass and inconsistency remains, the power supply may need inspection.",
+        detail: "This is more common on older machines or machines that have been run hard at maximum power frequently."
+      }
+    ],
+    conditional: []
+  },
+
+  // ---- EXCESSIVE SOOT ----
+  "soot": {
+    icon: "🖤",
+    title: "Excessive Soot / Smoke Staining",
+    desc: "Combustion byproducts are settling back on the material surface instead of being exhausted away.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Improve air assist",
+        desc: "Air assist blows smoke and combustion gases away from the cut zone before they can settle back on the material surface. This is the primary solution for soot.",
+        action: "Add or strengthen air assist. Direct the airflow at the cut point.",
+        detail: "Strong air assist alone often eliminates surface soot almost completely on wood and MDF."
+      },
+      {
+        priority: "high",
+        title: "Mask the surface",
+        desc: "Transfer tape or painter's tape on the surface catches soot and smoke staining. Peel it off after cutting to reveal a clean surface.",
+        action: "Apply transfer tape or low-tack masking tape before cutting. Peel after the job is complete.",
+        detail: "This is standard practice for plywood and MDF cutting. Use low-tack tape to avoid damaging the surface on removal."
+      },
+      {
+        priority: "high",
+        title: "Check exhaust and ventilation",
+        desc: "If your exhaust fan isn't removing smoke quickly enough, it recirculates inside the machine and settles on the material.",
+        action: "Check that your exhaust fan runs at full power and the duct isn't kinked, blocked, or too long.",
+        detail: "Exhaust ducts that are too long, have too many bends, or are clogged with residue lose significant suction. Clean or shorten the duct."
+      },
+      {
+        priority: "medium",
+        title: "Cut from the back side if possible",
+        desc: "Soot deposits primarily on the side facing up (where smoke rises). Cutting with the finished face down can protect the visible surface.",
+        action: "Flip the material so the finished or decorative face is facing down toward the bed.",
+        detail: "This works well for engraving and for jobs where the bottom surface finish doesn't matter."
+      },
+      {
+        priority: "medium",
+        title: "Increase speed to reduce smoke generation",
+        desc: "Slower cuts produce more smoke overall. Faster cuts with more passes generate less smoke per pass.",
+        action: "Try increasing speed and adding a pass to compensate. Compare soot levels.",
+        detail: ""
+      },
+      {
+        priority: "low",
+        title: "Clean the machine interior regularly",
+        desc: "A heavily sooted machine interior recirculates residue during cuts. Regular cleaning reduces ambient soot levels.",
+        action: "Wipe down the interior surfaces, honeycomb bed, and laser head area regularly.",
+        detail: "A dirty honeycomb bed is a major soot source — remove and clean or replace it periodically."
+      }
+    ],
+    conditional: [
+      {
+        condition: function(lt, mat) { return mat === 'mdf'; },
+        fix: {
+          priority: "medium",
+          title: "MDF produces heavy soot — masking is essential",
+          desc: "MDF binders produce significantly more smoke than natural wood. Masking is almost mandatory for clean results.",
+          action: "Always mask MDF before cutting. Use transfer tape on both sides for through-cuts.",
+          detail: ""
+        },
+        insertAt: 1
+      }
+    ]
+  },
+
+  // ---- ROUGH EDGE ----
+  "rough-edge": {
+    icon: "🪚",
+    title: "Rough / Ragged Cut Edge",
+    desc: "The cut edge quality depends on focus, material, speed, and air assist working together.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Check and reset focus",
+        desc: "An out-of-focus beam produces a wider, less precise kerf and ragged edges. Correct focus is essential for clean cut edges.",
+        action: "Re-focus at the exact surface of the material and retest.",
+        detail: "For the cleanest edges, especially on acrylic, precise focus is critical."
+      },
+      {
+        priority: "high",
+        title: "Improve air assist",
+        desc: "Air assist blows molten or burning material out of the kerf as the beam cuts, leaving a cleaner edge. Without it, material re-solidifies on the cut edge.",
+        action: "Add or strengthen air assist directed at the cut point.",
+        detail: "For acrylic, strong air assist is the biggest single factor in edge quality. For wood, it reduces charring on the edge."
+      },
+      {
+        priority: "high",
+        title: "Slow down slightly",
+        desc: "Too-high cutting speed can produce a rough, torn edge because the material doesn't have time to vaporize cleanly.",
+        action: "Reduce speed by 15–20% and test the edge quality.",
+        detail: "Find the sweet spot where the material vaporizes cleanly without excessive heat buildup."
+      },
+      {
+        priority: "medium",
+        title: "Check material type and quality",
+        desc: "Some materials produce rough edges by nature. Construction plywood with voids, extruded acrylic, and faux leather all produce rougher edges than premium alternatives.",
+        action: "Switch to laser-grade ply, cast acrylic, or veg-tan leather for the cleanest edges.",
+        detail: ""
+      },
+      {
+        priority: "medium",
+        title: "Use more passes at lower power",
+        desc: "One high-power pass often produces rougher edges than multiple moderate-power passes.",
+        action: "Reduce power by 15%, increase speed, and add a pass. Compare edge quality.",
+        detail: "This is especially effective for acrylic, where slow high-power cuts produce gummy edges."
+      },
+      {
+        priority: "low",
+        title: "Check for mechanical looseness",
+        desc: "A loose laser head, belt, or wheel can cause slight vibration during the cut, producing irregular edges.",
+        action: "Check that the laser head is secure, belts are tensioned, and wheels have no play.",
+        detail: ""
+      }
+    ],
+    conditional: [
+      {
+        condition: function(lt, mat) { return mat === 'acrylic-opaque' || mat === 'acrylic-clear' || mat === 'acrylic-mirror'; },
+        fix: {
+          priority: "medium",
+          title: "Use cast acrylic, not extruded",
+          desc: "Extruded acrylic produces gummy, uneven cut edges. Cast acrylic vaporizes cleanly and produces the characteristic smooth or flame-polished edge.",
+          action: "Confirm you are using cast acrylic. Extruded acrylic is cheaper but produces inferior cut edge quality.",
+          detail: "Cast acrylic is marked 'cast' or 'cell cast'. Extruded is cheaper and often sold without specification at general craft stores."
+        },
+        insertAt: 3
+      }
+    ]
+  },
+
+  // ---- FLAME-UPS ----
+  "flame-ups": {
+    icon: "🚨",
+    title: "Flame-Ups / Material Catching Fire",
+    desc: "This is a safety issue. Address root causes before running another job.",
+    safety: true,
+    base: [
+      {
+        priority: "high",
+        title: "Never leave the laser unattended",
+        desc: "Flame-ups can escalate quickly. The laser must be monitored at all times during a cut.",
+        action: "Keep a fire extinguisher within reach. Never walk away from a running job.",
+        detail: "A CO2 fire extinguisher is preferred. Halon alternatives are available. Do not use water on a laser fire."
+      },
+      {
+        priority: "high",
+        title: "Add or improve air assist",
+        desc: "Strong air assist blows flames away from the material before they can take hold, and removes flammable gases from the cut zone.",
+        action: "Do not run this material without air assist. Improve the strength or direction of your air flow.",
+        detail: "Air assist is the primary defence against flame-ups. Paper and thin wood are especially prone to catching fire without it."
+      },
+      {
+        priority: "high",
+        title: "Increase cutting speed",
+        desc: "Slower cuts allow more time for heat to build up and gases to accumulate and ignite. Faster cutting with more passes reduces dwell time.",
+        action: "Increase speed significantly and add passes to compensate for less energy per pass.",
+        detail: ""
+      },
+      {
+        priority: "high",
+        title: "Check material suitability",
+        desc: "Some materials are far more flammable than others. Paper, thin cardstock, and certain foams and plastics are high fire-risk materials.",
+        action: "Use the Safety Checker to confirm this material is safe to laser. If in doubt, do not cut it.",
+        detail: "PVC/vinyl, certain foams, and rubbers can ignite easily and release toxic fumes when burning. Identify your material before attempting to laser it."
+      },
+      {
+        priority: "medium",
+        title: "Reduce power",
+        desc: "High power produces more heat at the cut zone, increasing ignition risk. Use the minimum power needed to cut the material.",
+        action: "Reduce power and compensate with slower speed or more passes.",
+        detail: ""
+      },
+      {
+        priority: "medium",
+        title: "Ensure exhaust is working properly",
+        desc: "Flammable gases building up inside the machine enclosure can ignite from the laser beam. Good exhaust removes them before they accumulate.",
+        action: "Check exhaust fan operation and duct for blockages before running another job.",
+        detail: ""
+      },
+      {
+        priority: "low",
+        title: "Use a honeycomb bed and elevate the material",
+        desc: "Cutting directly on a flat surface traps heat and gases underneath the material. A honeycomb bed allows airflow under the cut and reduces fire risk.",
+        action: "Switch to a honeycomb bed if you aren't already using one.",
+        detail: ""
+      }
+    ],
+    conditional: [
+      {
+        condition: function(lt, mat) { return mat === 'paper'; },
+        fix: {
+          priority: "high",
+          title: "Paper is a very high fire-risk material",
+          desc: "Paper ignites at low temperatures and flame-ups are common without proper settings and air assist.",
+          action: "Use maximum air assist, increase speed significantly, and never leave paper cuts unattended.",
+          detail: "Reduce power to the minimum needed. Paper cuts very easily and rarely needs more than 50–60% power even on lower-wattage machines."
+        },
+        insertAt: 1
+      }
+    ]
+  },
+
+  // ---- SMOKY ENGRAVING ----
+  "smoky-engrave": {
+    icon: "💨",
+    title: "Smoky / Hazy Engraving",
+    desc: "Smoke is contaminating the engraved surface during the job. The solution is usually ventilation and masking.",
+    safety: false,
+    base: [
+      {
+        priority: "high",
+        title: "Add or improve air assist",
+        desc: "Air assist blows smoke away from the engraving area before it can settle back on the surface.",
+        action: "Add or strengthen air assist and retest.",
+        detail: "For engraving, air assist direction matters — it should blow across the engraving path, not into the material surface at high pressure which can disturb fine engraving detail."
+      },
+      {
+        priority: "high",
+        title: "Mask the surface",
+        desc: "Masking tape catches smoke residue during engraving. Peel it off for a clean surface.",
+        action: "Apply transfer tape or low-tack masking tape to the surface before engraving.",
+        detail: "This is particularly effective for wood engraving where smoke staining around engraved areas is a common complaint."
+      },
+      {
+        priority: "high",
+        title: "Check exhaust flow",
+        desc: "Smoke recirculating inside the machine settles on the engraved surface. Ensure exhaust is running at full power.",
+        action: "Confirm exhaust fan is running, duct isn't blocked, and the enclosure seals well during operation.",
+        detail: ""
+      },
+      {
+        priority: "medium",
+        title: "Engrave in the right direction",
+        desc: "Engraving top-to-bottom (starting at the back of the work area) means fresh smoke from later passes is blown across already-engraved areas. Bottom-to-top engraving can reduce this.",
+        action: "In LightBurn, try reversing the scan direction so engraving starts at the bottom.",
+        detail: "Combined with good air assist, direction control can significantly reduce smoke staining."
+      },
+      {
+        priority: "medium",
+        title: "Increase speed to reduce smoke generation",
+        desc: "Slower engraving produces more smoke per pass. Faster engraving at the same or slightly higher power generates less total smoke.",
+        action: "Try increasing speed by 20% and compare smoke levels.",
+        detail: ""
+      },
+      {
+        priority: "low",
+        title: "Clean the lens before engraving",
+        desc: "A dirty lens causes an imprecise beam that burns more material than necessary, generating excess smoke.",
+        action: "Clean the lens before starting an engraving job.",
+        detail: ""
+      }
+    ],
+    conditional: [
+      {
+        condition: function(lt, mat) { return mat === 'leather' || mat === 'leatherette'; },
+        fix: {
+          priority: "medium",
+          title: "Leather smoke stains easily",
+          desc: "Leather surface is porous and absorbs smoke readily. Masking and air assist are both important for clean leather engraving.",
+          action: "Always mask leather before engraving and use air assist.",
+          detail: "After removing the mask, a light wipe with a damp cloth removes any remaining residue from the surface."
+        },
+        insertAt: 1
+      }
+    ]
+  }
+
+}; // end FIXES
+
+// ============================================
+// BUILD FIX LIST
+// ============================================
+function getFixList() {
+  if (!selectedSymptom) {
+    alert('Please select a symptom first by clicking one of the options above.');
+    return;
+  }
+
+  var laserType  = document.getElementById('laser-type').value;
+  var material   = document.getElementById('material-type').value;
+  var airAssist  = document.getElementById('air-assist').value;
+  var maint      = document.getElementById('maintenance').value;
+
+  var data = FIXES[selectedSymptom];
+  if (!data) return;
+
+  // Build fix array from base + applicable conditionals
+  var fixes = data.base.slice(); // copy
+
+  data.conditional.forEach(function(c) {
+    if (c.condition(laserType, material, airAssist, maint)) {
+      var insertPos = (c.insertAt !== undefined) ? Math.min(c.insertAt, fixes.length) : fixes.length;
+      fixes.splice(insertPos, 0, c.fix);
+    }
+  });
+
+  // Safety flag
+  var safetyFlag = document.getElementById('safetyFlag');
+  safetyFlag.classList.toggle('visible', !!data.safety);
+
+  // Summary
+  document.getElementById('resultIcon').textContent = data.icon;
+  document.getElementById('resultTitle').textContent = data.title;
+
+  var context = [];
+  if (laserType) context.push(laserType.replace('diode-low','low-power diode').replace('diode-mid','mid-power diode').replace('diode-high','high-power diode').replace('co2-low','low-power CO2').replace('co2-mid','mid-power CO2').replace('co2-high','high-power CO2').replace('fiber','fiber laser'));
+  if (material)  context.push(document.getElementById('material-type').options[document.getElementById('material-type').selectedIndex].text);
+  document.getElementById('resultDesc').textContent = data.desc + (context.length ? ' Context: ' + context.join(', ') + '.' : '');
+
+  // Render fix list
+  var listDiv = document.getElementById('fixList');
+  listDiv.innerHTML = '';
+  fixes.forEach(function(fix, i) {
+    var item = document.createElement('div');
+    item.className = 'fix-item';
+    item.innerHTML =
+      '<div class="fix-item-header">' +
+        '<div class="fix-number priority-' + fix.priority + '">' + (i+1) + '</div>' +
+        '<div class="fix-content">' +
+          '<div class="fix-title">' + fix.title + '</div>' +
+          '<div class="fix-desc">' + fix.desc + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="fix-item-footer">' +
+        '<div class="fix-action">→ ' + fix.action + '</div>' +
+        (fix.detail ? '<div class="fix-action-detail">' + fix.detail + '</div>' : '') +
+      '</div>';
+    listDiv.appendChild(item);
+  });
+
+  // Show result
+  var panel = document.getElementById('resultPanel');
+  panel.style.display = 'block';
+  document.getElementById('adAfterResult').style.display = 'flex';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function toggleFaq(el) { el.parentElement.classList.toggle('open'); }
+function toggleNav()    { document.getElementById('navLinks').classList.toggle('open'); }
+</script>
+
+</body>
+</html>
